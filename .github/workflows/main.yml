@@ -1,8 +1,14 @@
 name: Maintain IPMHub AVM modules
 
-on:
-  # Zorgt ervoor dat de workflow alleen handmatig kan worden gestart
+on: 
   workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      param2:
+        description: 'Parameter 2'  
 
 jobs:
   build:
