@@ -861,7 +861,8 @@ Function Copy-AvmModuleForBuild
   # If the version only contains a major and minor, there is something wrong.
   If (($AvmModule.Version -split "\.").Count -ne 3)
   {
-    "Cannot build package '{0}'. No published version found. AVM name: '{1}', version value: '{2}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName, ($AvmModule.Version -split "\.") | Write-Warning
+    $VersionValue = $AvmModule.Version | ConvertTo-Json -Depth 2
+    "Cannot build package '{0}'. No published version found. AVM name: '{1}', version value: '{2}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName, $VersionValue | Write-Warning
     Return
   }
 
