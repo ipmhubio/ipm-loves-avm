@@ -38,7 +38,7 @@ jobs:
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
         Install-Module -Name "Pester" -AllowClobber -Force -Scope "CurrentUser"
-        & ./src/scripts/prepare-tests.ps1 -AvmRepositoryRootPath $AvmPackageBuildRoot -TestRootPath $TestRoot
+        & ./src/scripts/prepare-tests.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -TestRootPath $TestRoot
         $Container = New-Pestercontainer -path ./src/tests/avm-modules.tests.ps1 -Data @{ AvmRepositoryRootPath = $AvmPackageBuildRoot }
         Invoke-Pester -Container $Container -Output Detailed
       shell: pwsh
