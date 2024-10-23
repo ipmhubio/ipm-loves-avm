@@ -1,9 +1,8 @@
 name: Maintain IPMHub AVM modules
 
-#on:
-#  push:
-#    branches:
-#    - main
+on:
+  # Zorgt ervoor dat de workflow alleen handmatig kan worden gestart
+  workflow_dispatch:
 
 jobs:
   build:
