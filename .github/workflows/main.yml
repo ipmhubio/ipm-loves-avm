@@ -1,0 +1,92 @@
+name: Maintain IPMHub AVM modules
+
+on: 
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+      param2:
+        description: 'Parameter 2'  
+
+jobs:
+  build:
+    name: Build IPMHub variant of AVM modules
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: src
+
+    - name: Checkout AVM public GitHub repository
+      uses: actions/checkout@v4
+      with:
+        repository: Azure/bicep-registry-modules
+        path: avm
+
+    - name: Prepare the AVM modules to become IPMHub acceptable
+      run: |
+        $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
+        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
+        & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot
+      shell: pwsh
+
+    - name: Test the IPMHub packages
+      id: test
+      run: |
+        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
+        $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
+        Install-Module -Name "Pester" -AllowClobber -Force -Scope "CurrentUser"
+        & ./src/prepare-tests.ps1 -AvmRepositoryRootPath $AvmPackageBuildRoot -TestRootPath $TestRoot
+        $Container = New-Pestercontainer -path ./src/tests/avm-modules.tests.ps1 -Data @{ AvmRepositoryRootPath = $AvmPackageBuildRoot }
+        Invoke-Pester -Container $Container -Output Detailed
+      shell: pwsh
+      continue-on-error: true
+
+    - name: Zip build output before storing as an artifact
+      run: zip buildresults.zip ./build/* -r -x "*/packages/*"
+
+    - name: Publish IPMHub packages as an artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: avm-buildresults
+        path: buildresults.zip
+        retention-days: ${{ steps.test.outcome == 'success' && 31 || 3 }} 
+
+  publish:
+    name: Publish IPMHub packages
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+    steps:
+    - name: Download the IPMHub packages that probably should be published
+      uses: actions/download-artifact@v4
+      with:
+        name: avm-buildresults
+
+    - name: Publish all packages to IPMHub if required
+      run: |
+        Write-Host "Publishing..."
+      shell: pwsh
+
+  notification:
+    name: Notify completion
+    runs-on: ubuntu-latest
+    needs: [build, publish]
+    steps:
+    - name: Notify on Failure
+      if: failure()
+      run: |
+        Write-Host "Something went wrong" -TeamsToken ${{ secrets.TEAMS_WEBHOOK_URL }}
+      shell: pwsh
+      env:
+        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+    - name: Notify on success
+      if: success()
+      run: |
+        Write-Host "Publication succeeded" -TeamsToken ${{ secrets.TEAMS_WEBHOOK_URL }}
+      shell: pwsh
+      env:
+        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
