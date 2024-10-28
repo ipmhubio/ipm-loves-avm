@@ -1,0 +1,26 @@
+{
+  "debug.internalConsoleOptions": "neverOpen",
+  "files.associations": {
+    "*.yml": "azure-pipelines",
+    "*.yaml": "azure-pipelines"
+  },
+  "powershell.scriptAnalysis.settingsPath": "ScriptAnalyzerSettings.psd1",
+  "powershell.scriptAnalysis.enable": true,
+  "powershell.codeFormatting.ignoreOneLineBlock": true,
+  "powershell.codeFormatting.pipelineIndentationStyle": "IncreaseIndentationAfterEveryPipeline",
+  "powershell.codeFormatting.preset": "Allman",
+  "powershell.codeFormatting.useCorrectCasing": true,
+  "powershell.codeFormatting.autoCorrectAliases": true,
+  "powershell.codeFormatting.trimWhitespaceAroundPipe": true,
+  "powershell.codeFormatting.whitespaceBetweenParameters": true,
+  "powershell.codeFormatting.newLineAfterCloseBrace": true,
+  "powershell.codeFormatting.openBraceOnSameLine": false,
+  "powershell.codeFormatting.addWhitespaceAroundPipe": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.formatOnSave": false,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  }
+}

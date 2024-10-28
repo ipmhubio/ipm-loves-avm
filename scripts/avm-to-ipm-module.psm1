@@ -43,7 +43,7 @@ Function Get-AvmClassificationFromName
   {
     "UtilityModule"
   } `
-  Else 
+  Else
   {
     "Unknown"
   }
@@ -80,7 +80,7 @@ Function Get-AvmGitFutureCommitsWithTags
     $CommitId = $CommitParts | Select-Object -First 1
     $CommitDate = $CommitParts | Select-Object -Last 1
     $Tag = git tag --points-at $CommitId 2>$null
-    If ($Null -ne $Tag) 
+    If ($Null -ne $Tag)
     {
       If (-not($ResourceModules.IsPresent -and $True -eq $ResourceModules) -and $Tag.StartsWith("avm/res"))
       {
@@ -124,23 +124,23 @@ Function Get-AvmGitRepositoryPublishedModules
     [Parameter(Mandatory = $False)]
     [Switch] $UtilityModules
   )
-  
+
   # 01. Get a list of all tags that indicate a published module, specific on the current branch/tag.
   $AvmPublishedModuleList = (& git tag --merged) `
-  | Where-Object { 
-    ($ResourceModules.IsPresent -and $True -eq $ResourceModules -and $_.StartsWith("avm/res/")) -or 
-    ($PatternModules.IsPresent -and $True -eq $PatternModules -and $_.StartsWith("avm/ptn/")) -or 
+  | Where-Object {
+    ($ResourceModules.IsPresent -and $True -eq $ResourceModules -and $_.StartsWith("avm/res/")) -or
+    ($PatternModules.IsPresent -and $True -eq $PatternModules -and $_.StartsWith("avm/ptn/")) -or
     ($UtilityModules.IsPresent -and $True -eq $UtilityModules -and $_.StartsWith("avm/utl/"))
   } `
-  | ForEach-Object { 
-    $Parts = $_ -split "/" 
-    $Name = ($Parts | Select-Object -Skip 2 | Select-Object -SkipLast 1) -join "/"   
+  | ForEach-Object {
+    $Parts = $_ -split "/"
+    $Name = ($Parts | Select-Object -Skip 2 | Select-Object -SkipLast 1) -join "/"
     $Version = $Parts | Select-Object -Last 1
-    [PsCustomObject] @{ 
+    [PsCustomObject] @{
       Name = $Name
       Version = $Version;
       Classification = $_ | Get-AvmClassificationFromName
-      TagName = $_; 
+      TagName = $_;
       PublishedOn = $Null
       IsLatest = $False
     }
@@ -162,17 +162,17 @@ Function Get-AvmGitRepositoryPublishedModules
     $Parts = $AllTagResult -split ";"
     $TagName = $Parts[0]
     $CommitId = $Parts[1]
-    $CommitFound = $AllCommitsWithDates | Where-Object { $_.CommitId -eq $CommitId } | Select-Object -First 1 
-    $PublishedModuleFound = $AvmPublishedModuleList | Where-Object { $_.TagName -eq $TagName } | Select-Object -First 1 
+    $CommitFound = $AllCommitsWithDates | Where-Object { $_.CommitId -eq $CommitId } | Select-Object -First 1
+    $PublishedModuleFound = $AvmPublishedModuleList | Where-Object { $_.TagName -eq $TagName } | Select-Object -First 1
     If (-not($CommitFound) -or -not($PublishedModuleFound)) { Continue }
-  
+
     $CommitDate = [DateTimeOffset]::Parse($CommitFound.CommitDate).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
     $PublishedModuleFound.PublishedOn = $CommitDate
   }
 
   # 04. We are mostly interested in the 'latest' versions of the module, that must be the one in main now.
   ForEach($UniqueModule in ($AvmPublishedModuleList | Group-Object -Property "Name"))
-  { 
+  {
     $LatestVersion = $UniqueModule.Group.Version | ForEach-Object { [Version] $_ } | Sort-Object -Descending | Select-Object -First 1
     $LatestAvmModuleFound = $AvmPublishedModuleList | Where-Object { $_.Name -eq $UniqueModule.Name -and ([Version]$_.Version) -eq $LatestVersion }
     $LatestAvmModuleFound.IsLatest = $True
@@ -216,8 +216,8 @@ Function Search-PublicRegistryModuleReference
           # Not supported
           Continue
         }
-      }      
-      
+      }
+
       $FoundReference = $FoundReferences | Where-Object { $_.Name -eq $Name }
       If ($Null -ne $FoundReference)
       {
@@ -256,15 +256,15 @@ Function Search-RelevantModuleFiles
     $RelativePath = Split-Path -Path $RootPath -LeafBase
     $ChildRelativePath = "{0}{1}" -f $RelativePath, [System.IO.Path]::DirectorySeparatorChar
   }
-  Else 
+  Else
   {
     $RelativePath = Split-Path -Path $RootPath -LeafBase
     $ChildRelativePath = "{0}{1}{2}{3}" -f $ParentRelativePath.TrimEnd('/').TrimEnd('\'), [System.IO.Path]::DirectorySeparatorChar, $RelativePath, [System.IO.Path]::DirectorySeparatorChar
   }
-  
+
   $Items = [System.Collections.ArrayList]@()
   $ChildItems = Get-ChildItem -Path $RootPath -Directory | Where-Object { $_.Name -ne "tests" }
-  ForEach($ChildItem in $ChildItems) 
+  ForEach($ChildItem in $ChildItems)
   {
     $InnerChildItems = (Search-RelevantModuleFiles -RootPath $ChildItem.FullName -ParentRelativePath $ChildRelativePath).ChildItems ?? @()
     $Items.Add([PsCustomObject] @{
@@ -367,6 +367,7 @@ Function Get-AvmModuleMetadata
   # 01. We first need to gather the list of published AVM modules from the current branch
   $AvmPublishedModuleListLatest = Get-AvmGitRepositoryPublishedModules -ResourceModules -UtilityModules | Where-Object { $True -eq $_.IsLatest } | Select-Object -ExcludeProperty "IsLatest"
 
+  # TODO: This list should be in a json configuration / mapping file.
   $IpmHubNameReplacements = @(
     @{
       Search = "azure-virtual-desktop"
@@ -391,7 +392,7 @@ Function Get-AvmModuleMetadata
     @{
       Search = "kubernetes-config-flux-configurations"
       Replace = "kubernetes-flux-configurations"
-    }    
+    }
     @{
       Search = "application-"
       Replace = "app-"
@@ -451,7 +452,7 @@ Function Get-AvmModuleMetadata
     Get-ChildItem -Path $AvmResfolderRoot -Filter "version.json" -Recurse
     # Get-ChildItem -Path $AvmPtnFolderRoot -Filter "version.json" -Recurse
   )
-  
+
   ForEach($VersionFile in $VersionFiles)
   {
     $ModuleRoot = $VersionFile.Directory.FullName
@@ -466,8 +467,8 @@ Function Get-AvmModuleMetadata
     $ReferencedModules = @()
     $ModuleFilesFlat = Convert-AvmModuleMetadataItemsToFlat -Items $ModuleFiles
     ForEach($FileReferencedModule in $ModuleFilesFlat.ReferencedModules)
-    { 
-      $Versions = [Array] ($FileReferencedModule.Versions | Where-Object { $_ -ne "<version>" }) ?? @() # We can ignore the docs versions. 
+    {
+      $Versions = [Array] ($FileReferencedModule.Versions | Where-Object { $_ -ne "<version>" }) ?? @() # We can ignore the docs versions.
       If ($Versions.Count -eq 0) { Continue }
 
       $Name = $FileReferencedModule.Name
@@ -496,7 +497,7 @@ Function Get-AvmModuleMetadata
 
     # Read metadata from bicep file
     $BicepFileContent = Get-Content -Path $BicepFile -Encoding "UTF8" | Select-Object -First 20
-    
+
     # Read metadata from README
     $ReadmeFileContent = Get-Content -Path $ReadmeFile -Encoding "UTF8" | Select-Object -First 50
     $ReadmeModuleAzureType = "unknown"
@@ -522,7 +523,7 @@ Function Get-AvmModuleMetadata
         Continue
       }
     }
-    
+
     # Lets try to get our exact module version from our git history
     $ExactAvmModule = $AvmPublishedModuleListLatest | Where-Object { $_.Name -eq $ReadmePublicBicepRegistryIdentification } | Select-Object -First 1
 
@@ -544,7 +545,7 @@ Function Get-AvmModuleMetadata
       IpmHubName = ""
       Classification = $ReadmeModuleClassification
       AzureType = $ReadmeModuleAzureType
-      PublishedOn = $ExactAvmModule.PublishedOn 
+      PublishedOn = $ExactAvmModule.PublishedOn
       Description = $Description
       RootPath = $ModuleRoot
       RootName = Split-Path -Path $ModuleRoot -Leaf
@@ -580,7 +581,7 @@ Function Get-AvmModuleMetadata
     # There are situations where the referenced modules contains a reference to itself. We ignore those.
     ForEach($RefModule in $ReferencedModules)
     {
-      If ($RefModule.Name -ne $ModuleToAdd.AcrName) 
+      If ($RefModule.Name -ne $ModuleToAdd.AcrName)
       {
         $ModuleToAdd.ReferencedModules += $RefModule
       } `
@@ -606,7 +607,7 @@ Function Get-AvmModuleMetadata
   {
     ForEach($RefModule in $Module.ReferencedModules)
     {
-      # Find the module based on their acr name. 
+      # Find the module based on their acr name.
       $FoundModule = $Modules | Where-Object { $_.AcrName -eq $RefModule.Name }
       If ($Null -ne $FoundModule)
       {
@@ -655,12 +656,12 @@ Function Get-AvmModuleMetadata
     {
       $Modules = $Modules | Where-Object { $_.Classification -ne "ResourceModule" }
     }
-  
+
     If (-not($PatternModules.IsPresent -and $True -eq $PatternModules))
     {
       $Modules = $Modules | Where-Object { $_.Classification -ne "PatternModule" }
     }
-  
+
     If (-not($UtilityModules.IsPresent -and $True -eq $UtilityModules))
     {
       $Modules = $Modules | Where-Object { $_.Classification -ne "UtilityModule" }
@@ -695,11 +696,11 @@ Function Remove-TelemetryFromBicepFile
   }
 
   Process
-  {      
+  {
     If (-not(Test-Path -Path $BicepFile))
     {
       Throw ("File '{0}' does not exist." -f $BicepFile)
-    } 
+    }
 
     If ($RemovalMethod -eq 1)
     {
@@ -724,7 +725,7 @@ Function Remove-TelemetryFromBicepFile
         Continue
       }
 
-      # If the line starts with '#disable-next-line no-deployments-resources', we can remove it. 
+      # If the line starts with '#disable-next-line no-deployments-resources', we can remove it.
       If ($Line -like "#disable-next-line no-deployments-resources*")
       {
         Continue
@@ -881,7 +882,7 @@ Function Copy-AvmModuleForBuild
   {
     $Destination = Join-Path -Path $PackageFolder -ChildPath $Item.RelativePath
     $DestinationDirectory = [System.IO.Path]::GetDirectoryName($Destination)
-    If (-not (Test-Path $DestinationDirectory)) 
+    If (-not (Test-Path $DestinationDirectory))
     {
       New-Item -Path $DestinationDirectory -ItemType Directory -Force | Out-Null
     }
@@ -900,14 +901,14 @@ Function Copy-AvmModuleForBuild
         {
           $RefRelativePath = ".{0}" -f $RefRelativePath
         }
-        
+
         # | `br/public:avm/res/network/private-endpoint:0.7.0` | Remote reference |
         $ModuleTypes = @("res", "ptn", "utl")
         ForEach($ModuleType in $ModuleTypes)
         {
           $FileContent = $FileContent -replace ("br/public:avm/{0}/{1}:<version>" -f $ModuleType, $Ref.Name), ("./packages/{0}/main.bicep" -f $AvmModule.IpmHubName)
         }
-                
+
         ForEach($RefVersion in $Ref.Versions)
         {
           ForEach($ModuleType in ($ModuleTypes))
@@ -922,7 +923,7 @@ Function Copy-AvmModuleForBuild
           }
         }
       }
-      
+
       $FileContent | Out-File -FilePath $Destination -Encoding "UTF8" -Force
     }
   }
@@ -954,7 +955,7 @@ Function Copy-AvmModuleForBuild
   # When referenced modules, create a ipmhub.json
   If ($AvmModule.ReferencedModules.Count -gt 0)
   {
-    $Packages = $AvmModule.ReferencedModules | ForEach-Object { 
+    $Packages = $AvmModule.ReferencedModules | ForEach-Object {
       If ($_.Versions.Count -gt 1)
       {
         @{
@@ -969,7 +970,7 @@ Function Copy-AvmModuleForBuild
           name = "{0}/{1}" -f $IpmHubOrganizationName, $_.IpmHubName
           version = $_.Versions | Select-Object -First 1
         }
-      }      
+      }
     }
 
     $IpmHubConfig = [Ordered] @{

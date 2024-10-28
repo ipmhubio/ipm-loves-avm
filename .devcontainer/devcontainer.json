@@ -1,0 +1,34 @@
+{
+    "name": "IPMHub AVM DevContainer",
+    "build": {
+      "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+      "vscode": {
+        "settings": {
+          "terminal.integrated.defaultProfile.linux": "pwsh",
+          "terminal.integrated.profiles.linux": {
+            "pwsh": {
+              "path": "/usr/bin/pwsh",
+              "icon": "terminal-powershell"
+            }
+          }
+        },
+        "extensions": [
+            "ms-vscode.powershell",
+            "ms-azuretools.vscode-bicep",
+            "ms-azure-devops.azure-pipelines",
+            "ms-vscode-remote.remote-wsl",
+            "ms-vscode-remote.remote-containers",
+            "esbenp.prettier-vscode",
+            "yzhang.markdown-all-in-one",
+            "vscode-icons-team.vscode-icons"
+        ]
+      }
+    },
+    "postCreateCommand": "git clone https://github.com/Azure/bicep-registry-modules.git /workingfolder/avm",
+    "mounts": [
+      "source=${localWorkspaceFolder},target=/workingfolder/src,type=bind"
+    ],
+    "workspaceFolder": "/workingfolder"
+  }

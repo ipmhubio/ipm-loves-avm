@@ -37,10 +37,8 @@ jobs:
       run: |
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
-        Install-Module -Name "Pester" -AllowClobber -Force -Scope "CurrentUser"
         & ./src/scripts/prepare-tests.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -TestRootPath $TestRoot
-        $Container = New-Pestercontainer -path ./src/tests/avm-modules.tests.ps1 -Data @{ AvmRepositoryRootPath = $AvmPackageBuildRoot }
-        Invoke-Pester -Container $Container -Output Detailed
+        & ./src/scripts/run-tests.ps1 -TestRootPath $TestRoot
       shell: pwsh
       continue-on-error: true
 

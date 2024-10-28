@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "ms-vscode.powershell",
+    "ms-azuretools.vscode-bicep",
+    "ms-azure-devops.azure-pipelines",
+    "ms-vscode-remote.remote-wsl",
+    "ms-vscode-remote.remote-containers",
+    "Gruntfuggly.todo-tree",
+    "esbenp.prettier-vscode",
+    "visualstudioexptteam.vscodeintellicode",
+    "yzhang.markdown-all-in-one",
+    "vscode-icons-team.vscode-icons"
+  ]
+}
