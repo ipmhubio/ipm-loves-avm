@@ -27,7 +27,7 @@ jobs:
 
     - name: TESTS
       run: |
-        Import-Module ./src/scripts/avm-to-ipm-module.ps1
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
         Get-AvmGitRepositoryPublishedModules -ResourceModules -Verbose
       shell: pwsh
 
