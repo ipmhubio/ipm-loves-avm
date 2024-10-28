@@ -27,14 +27,6 @@ jobs:
         fetch-depth: 0
         tags: true
 
-    - name: TESTS
-      run: |
-        Import-Module ./src/scripts/avm-to-ipm-module.psm1
-        $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
-        Set-Location $AvmRepositoryRootPath
-        Get-AvmGitRepositoryPublishedModules -ResourceModules -Verbose
-      shell: pwsh
-
     - name: Prepare the AVM modules to become IPMHub acceptable
       run: |
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
