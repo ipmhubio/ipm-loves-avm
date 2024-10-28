@@ -24,6 +24,8 @@ jobs:
       with:
         repository: Azure/bicep-registry-modules
         path: avm
+        fetch-depth: 0
+        tags: true
 
     - name: TEST1
       run: |
