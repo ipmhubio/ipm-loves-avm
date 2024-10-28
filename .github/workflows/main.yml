@@ -25,6 +25,13 @@ jobs:
         repository: Azure/bicep-registry-modules
         path: avm
 
+    - name: TEST1
+      run: |
+        cd ./avm
+        git tag --merged
+        echo "foreach:"
+        git for-each-ref --format="%(refname:short);%(objectname)" refs/tags
+
     - name: TESTS
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
