@@ -73,6 +73,7 @@ jobs:
     name: Notify completion
     runs-on: ubuntu-latest
     needs: [build, publish]
+    if: always()
     steps:
     - name: Notify on TESTS Failure
       if: ${{ needs.build.outputs.test.outcome != 'success' }}
