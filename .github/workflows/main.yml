@@ -3,6 +3,12 @@ name: Maintain IPMHub AVM modules
 on:
   workflow_dispatch:
     inputs:
+      skipTests:
+        description: 'Should skip pester tests?'
+        required: true
+        default: false
+        type: boolean
+
       shouldPublish:
         description: 'Should publish the build results?'
         required: true
@@ -35,6 +41,7 @@ jobs:
 
     - name: Test the IPMHub packages
       id: test
+      if: ${{ github.event.inputs.skipTests == 'false' }}
       run: |
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
