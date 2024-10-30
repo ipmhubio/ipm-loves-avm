@@ -893,24 +893,29 @@ Function Copy-AvmModuleForBuild
     If ($Item.Type -eq "File" -and $Item.ReferencedModules.Count -gt 0)
     {
       $FileContent = Get-Content -Path $Destination -Encoding "UTF8" -Raw
+
+      # Replace README references to itself.
+      $Search = "br/public:avm/(res|ptn|utl)/{0}:<version>" -f $AvmModule.AcrName
+      $Replace = "./packages/{0}/main.bicep" -f $AvmModule.IpmHubName
+      $FileContent = $FileContent -replace $Search, $Replace
+
+      # There are situations (errors) where readme's contain the real version. We should replace these too.
+      $Search = "br/public:avm/(res|ptn|utl)/{0}:{1}" -f $AvmModule.AcrName, $AvmModule.Version
+      $Replace = "./packages/{0}/main.bicep" -f $AvmModule.IpmHubName
+      $FileContent = $FileContent -replace $Search, $Replace
+
       ForEach($Ref in $Item.ReferencedModules)
       {
         $RefIpmHubName = $AvmModule.ReferencedModules | Where-Object { $_.Name -eq $Ref.Name } | Select-Object -First 1 -ExpandProperty "IpmHubName"
-        $RefRelativePath = "{0}/" -f ((Split-Path -Path $Item.RelativePath -Parent) -split "[/\\]" | Where-Object { $_ -ne "" } | ForEach-Object { ".." }) -join [System.IO.Path]::DirectorySeparatorChar
+        $RefRelativePath = "{0}/" -f (((Split-Path -Path $Item.RelativePath -Parent) -split "[/\\]" | Where-Object { $_ -ne "" } | ForEach-Object { ".." }) -join [System.IO.Path]::DirectorySeparatorChar)
         If ($RefRelativePath.Length -eq 1)
         {
           $RefRelativePath = ".{0}" -f $RefRelativePath
         }
 
-        # | `br/public:avm/res/network/private-endpoint:0.7.0` | Remote reference |
         $ModuleTypes = @("res", "ptn", "utl")
-        ForEach($ModuleType in $ModuleTypes)
-        {
-          $FileContent = $FileContent -replace ("br/public:avm/{0}/{1}:<version>" -f $ModuleType, $Ref.Name), ("./packages/{0}/main.bicep" -f $AvmModule.IpmHubName)
-        }
-
         ForEach($RefVersion in $Ref.Versions)
-        {
+        {          
           ForEach($ModuleType in ($ModuleTypes))
           {
             $Find = [RegEx]::Escape(("``br/public:avm/{0}/{1}:{2}`` | Remote Reference |" -f $ModuleType, $Ref.Name, $RefVersion))

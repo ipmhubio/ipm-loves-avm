@@ -12,6 +12,9 @@ Param(
   [String] $IpmHubOrganizationName = "avm-bicep",
 
   [Parameter(Mandatory = $False)]
+  [PsCustomObject[]] $AvmModulesToSkip = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).avmModulesToSkip),
+
+  [Parameter(Mandatory = $False)]
   [String] $FromCommit# = "f44015a552cf319d1cc82c160e5000dede97f42b"
 )
 
@@ -64,17 +67,23 @@ If ([String]::IsNullOrEmpty($FromCommit))
   "Retrieving all AVM modules within the main branch..." | Write-Host
   $ModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -Verbose:$VerbosePreference
   "Found a total of {0} AVM modules, with {1} referenced modules within the main branch." -f $ModuleMetadata.Modules.Count, $ModuleMetadata.ReferencedModules.Count | Write-Host
-  $AvmModules.AddRange($ModuleMetadata.Modules) | Out-Null
 
   # Filter referenced modules that we still need to gather.
   $AllReferencedModulesToRetrieve = [Array] ($ModuleMetadata.ReferencedModules | Where-Object { $False -eq $_.IsPresent }) ?? @()
   "{0} referenced modules are not available within the main branch." -f $AllReferencedModulesToRetrieve.Count | Write-Host
   $ReferencedModulesToRetrieve.AddRange($AllReferencedModulesToRetrieve)
   
-  # 03. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
+  # 03b. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
   Get-ChildItem -Path $AvmPackageBuildRoot | Remove-Item -Recurse -Force
   ForEach($AvmModule in $ModuleMetadata.Modules)
   {
+    If ($AvmModule.AcrName -in $AvmModulesToSkip.name -or $AvmModule.IpmHubName -in $AvmModulesToSkip.name)
+    {
+      "Found AVM module '{0}', but this is on the ignore list. Skipping for copy." -f $AvmModule.AcrName | Write-Warning
+      Continue
+    }
+
+    $AvmModules.Add($AvmModule) | Out-Null
     Copy-AvmModuleForBuild -AvmModule $AvmModule -BuildRoot $AvmPackageBuildRoot -IpmHubOrganizationName $IpmHubOrganizationName -AdditionalFiles $AdditionalFiles
   }
 } `
@@ -91,6 +100,13 @@ Else
     & git checkout $PublishedTagDetails.TagName > $null 2>&1
     $ModuleMetadataSingle = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $PublishedTagDetails.Name -Verbose:$VerbosePreference
     $ModuleChild = $ModuleMetadataSingle.Modules | Select-Object -First 1
+
+    If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
+    {
+      "Found AVM module '{0}', but this is on the ignore list. Skipping for copy." -f $AvmModule.AcrName | Write-Warning
+      Continue
+    }
+
     $AvmModules.Add($ModuleChild) | Out-Null
 
     # Filter referenced modules that we need to gather.
@@ -99,21 +115,21 @@ Else
       $ModuleChildReferencedModulesToRetrieve = [Array] ($ModuleMetadataSingle.ReferencedModules) ?? @()
       "{0} referenced module(s) should be retrieved for this published tag." -f $ModuleChildReferencedModulesToRetrieve.Count | Write-Host -ForegroundColor "DarkGray"
       $ModuleChildReferencedModulesToRetrieve | ForEach-Object { 
-        If (-not ($ReferencedModulesToRetrieve.Tag -contains $_.Tag))
+        If (-not ($_.Tag -in $ReferencedModulesToRetrieve.Tag))
         {
           $ReferencedModulesToRetrieve.Add($_) | Out-Null
         }
       }      
     }
 
-    # 03. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
+    # 03b. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
     Copy-AvmModuleForBuild -AvmModule $ModuleChild -BuildRoot $AvmPackageBuildRoot -IpmHubOrganizationName $IpmHubOrganizationName -AdditionalFiles $AdditionalFiles
 
     "" | Write-Host
   }
 }
 
-# 05. We also make builds for all referenced modules (older) versions
+# 04. We also make builds for all referenced modules (older) versions
 If ($ReferencedModulesToRetrieve.Count -gt 0)
 {
   $ReferencestoRetrieveQueue = [System.Collections.Queue]::new()
@@ -148,7 +164,7 @@ If ($ReferencedModulesToRetrieve.Count -gt 0)
 "Switching local repo back to main..." | Write-Host -ForegroundColor "DarkYellow"
 & git switch main > $null 2>&1
 
-# Save content
+# 05. Save results as JSON to our build folder.
 $OutputFile = Join-Path -Path $AvmPackageBuildRoot -ChildPath "results.json"
 [PsCustomObject] @{
   Modules = $AvmModules | Select-Object -ExcludeProperty "RootPath", "RootName", "BicepFile", "ReadmeFile", "ItemsToInclude"

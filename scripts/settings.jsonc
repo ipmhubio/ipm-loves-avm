@@ -1,0 +1,8 @@
+{
+  "avmModulesToSkip": [
+    {
+      "name": "devtest-labs",
+      "version": "all"
+    }
+  ]
+}
