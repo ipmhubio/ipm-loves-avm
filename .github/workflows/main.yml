@@ -34,10 +34,14 @@ jobs:
 
     - name: Prepare the AVM modules to become IPMHub acceptable
       run: |
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+        $LastState = Get-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN"
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
-        & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot
+        & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.FromCommitId
       shell: pwsh
+      env:
+        STATE_SAS_TOKEN: ${{ secrets.STATE_SAS_TOKEN }}
 
     - name: Test the IPMHub packages
       id: test
@@ -53,7 +57,7 @@ jobs:
     - name: Zip build output before storing as an artifact
       run: zip buildresults.zip ./build/* -r -x "*/packages/*"
 
-    - name: Publish IPMHub packages as an artifact
+    - name: Publish IPMHub packages archive as an artifact
       uses: actions/upload-artifact@v4
       with:
         name: avm-buildresults
@@ -66,15 +70,44 @@ jobs:
     needs: build
     if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.test.outcome == 'success' }}
     steps:
-    - name: Download the IPMHub packages that probably should be published
+    - uses: actions/checkout@v4
+      with:
+        path: src
+
+    - name: Download the IPMHub packages archive that probably should be published
       uses: actions/download-artifact@v4
       with:
         name: avm-buildresults
 
-    - name: Publish all packages to IPMHub if required
+    - name: Extract the IPMHub packages from the archive
       run: |
-        Write-Host "Publishing..."
+        unzip buildresults.zip -d .
+        rm buildresults.zip
+      working-directory: ./avm-buildresults
+
+    - name: Publish all packages to IPMHub if required
+      id: publish
+      run: |
+        Get-ChildItem
+        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "avm-buildresults"
+        & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
       shell: pwsh
+      working-directory: ./avm-buildresults
+      env:
+        PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
+
+    - name: Update the publish state
+      run: |
+        Write-Host "Updating the last publish state..."
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+
+        # Read the last commit info from the results
+        $BuildResultFilePath = Join-Path -Path "avm-buildresults" -ChildPath "results.json"
+        $BuildResult = Get-Content -Path $BuildResultFilePath -Raw -Encoding "UTF8" | ConvertFrom-Json -Depth 10
+        Set-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN" -FromCommitId $BuildResult.FromCommit -TilCommitId $BuildResult.TilCommit
+      shell: pwsh
+      env:
+        STATE_SAS_TOKEN: ${{ secrets.STATE_SAS_TOKEN }}
 
   notification:
     name: Notify completion
@@ -82,18 +115,36 @@ jobs:
     needs: [build, publish]
     if: always()
     steps:
+    - uses: actions/checkout@v4
+      with:
+        path: src
     - name: Notify on TESTS Failure
       if: ${{ needs.build.outputs.test.outcome != 'success' }}
       run: |
-        Write-Host "Something went wrong" -TeamsToken ${{ secrets.TEAMS_WEBHOOK_URL }}
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+        $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
+        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP tests failed." -Text ("The last publication of AVM Bicep modules failed due tests failures. Please check the last GIT workflow run: {0}." -f $GitHubRunUri) -MessageType "Critical"
       shell: pwsh
       env:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
-    - name: Notify on success
-      if: ${{ needs.build.outputs.test.outcome == 'success' }}
+    - name: Notify on publication failure
+      if: ${{ needs.publish.outputs.publish.outcome != 'success' }}
       run: |
-        Write-Host "Publication succeeded" -TeamsToken ${{ secrets.TEAMS_WEBHOOK_URL }}
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+        $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
+        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication failed." -Text ("The last publication of AVM Bicep modules failed. Please check the last GIT workflow run: {0}." -f $GitHubRunUri) -MessageType "Critical"
+      shell: pwsh
+      env:
+        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+    - name: Notify on publication success
+      if: ${{ needs.publish.outputs.publish.outcome == 'success' }}
+      run: |
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+        $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
+        $Text = "The last publication of AVM Bicep modules succeeded. A total of {0} packages were created and {1} new versions uploaded.`nCheck the GIT workflow run here: {2}" -f "${{ env.TOTAL_PACKAGES_CREATED }}", "${{ env.TOTAL_PACKAGEVERSIONS_PUBLISHED }}", $GitHubRunUri
+        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication succeeded." -Text $Text -MessageType "Success"
       shell: pwsh
       env:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}

@@ -15,7 +15,7 @@ Param(
   [PsCustomObject[]] $AvmModulesToSkip = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).avmModulesToSkip),
 
   [Parameter(Mandatory = $False)]
-  [String] $FromCommit# = "f44015a552cf319d1cc82c160e5000dede97f42b"
+  [String] $FromCommit
 )
 
 $ScriptFolder = $PSScriptRoot
@@ -169,6 +169,8 @@ $OutputFile = Join-Path -Path $AvmPackageBuildRoot -ChildPath "results.json"
 [PsCustomObject] @{
   Modules = $AvmModules | Select-Object -ExcludeProperty "RootPath", "RootName", "BicepFile", "ReadmeFile", "ItemsToInclude"
   References = $ReferencedModulesToRetrieve
+  FromCommit = $FromCommit
+  TilCommit = Get-GitAvmLastCommitId
 } | ConvertTo-Json -Depth 100 | Out-File -Path $OutputFile -Encoding "UTF8"
 
 "Output was saved to '{0}'" -f $OutputFile | Write-Host
