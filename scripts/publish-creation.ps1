@@ -49,4 +49,9 @@ TOTAL_PACKAGES_FAILED={2}
 TOTAL_PACKAGEVERSIONS_PUBLISHED={3}
 "@ -f $TotalPackagesCreated, $TotalPackagesAlreadyExists, $TotalPackagesFailed, $TotalPackageVersionsPublished
   $DataToExport | Out-File -FilePath $env:GITHUB_ENV -Encoding "UTF8"
+
+  Write-Output "::set-output name=TOTAL_PACKAGES_CREATED::$TotalPackagesCreated"
+  Write-Output "::set-output name=TOTAL_PACKAGES_ALREADY_EXISTED::$TotalPackagesAlreadyExists"
+  Write-Output "::set-output name=TOTAL_PACKAGES_FAILED::$TotalPackagesFailed"
+  Write-Output "::set-output name=TOTAL_PACKAGEVERSIONS_PUBLISHED::$TotalPackageVersionsPublished"
 }
