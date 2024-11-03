@@ -76,7 +76,7 @@ jobs:
     name: Publish IPMHub packages
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.testsOutcome.outcome == 'success' }}
+    if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.testsOutcome == 'success' }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -134,7 +134,7 @@ jobs:
         path: src
 
     - name: Notify on TESTS Failure
-      if: ${{ needs.build.outputs.testsOutcome.outcome == 'failure' }}
+      if: ${{ needs.build.outputs.testsOutcome == 'failure' }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
