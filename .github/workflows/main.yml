@@ -55,9 +55,9 @@ jobs:
         & ./src/scripts/run-tests.ps1 -TestRootPath $TestRoot
 
         if ($?) {
-          echo "outcome=success" >> $GITHUB_OUTPUT
+          echo "outcome=success" >> $env:GITHUB_OUTPUT
         } else {
-          echo "outcome=failure" >> $GITHUB_OUTPUT
+          echo "outcome=failure" >> $env:GITHUB_OUTPUT
         }
       shell: pwsh
       continue-on-error: true
@@ -101,9 +101,9 @@ jobs:
         & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
 
         if ($?) {
-          echo "outcome=success" >> $GITHUB_OUTPUT
+          echo "outcome=success" >> $env:GITHUB_OUTPUT
         } else {
-          echo "outcome=failure" >> $GITHUB_OUTPUT
+          echo "outcome=failure" >> $env:GITHUB_OUTPUT
         }
       shell: pwsh
       working-directory: ./avm-buildresults
