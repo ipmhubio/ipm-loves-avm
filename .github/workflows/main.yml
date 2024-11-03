@@ -70,7 +70,7 @@ jobs:
       with:
         name: avm-buildresults
         path: buildresults.zip
-        retention-days: ${{ steps.test.outcome == success && 31 || 3 }}
+        retention-days: ${{ steps.test.outcome == 'success' && 31 || 3 }}
 
   publish:
     name: Publish IPMHub packages
