@@ -115,7 +115,7 @@ jobs:
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
 
         # Read the last commit info from the results
-        $BuildResultFilePath = Join-Path -Path "avm-buildresults" -ChildPath "results.json"
+        $BuildResultFilePath = Join-Path -Path "build" -ChildPath "results.json"
         $BuildResult = Get-Content -Path $BuildResultFilePath -Raw -Encoding "UTF8" | ConvertFrom-Json -Depth 10
         Set-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN" -FromCommitId $BuildResult.FromCommit -TilCommitId $BuildResult.TilCommit
       shell: pwsh
