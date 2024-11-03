@@ -75,6 +75,11 @@ jobs:
   publish:
     name: Publish IPMHub packages
     runs-on: ubuntu-latest
+    outputs:
+      packagesCreatedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGES_CREATED }}
+      packagesExistedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGES_ALREADY_EXISTED }}
+      packagesFailedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGES_FAILED }}
+      packagesNewVersionsPublishedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_PUBLISHED }}
     needs: build
     if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.testsOutcome != 'failure' }}
     steps:
@@ -157,7 +162,7 @@ jobs:
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
-        $Text = "The last publication of AVM Bicep modules succeeded. A total of {0} packages were created and {1} new versions uploaded.`nCheck the GIT workflow run here: {2}" -f "${{ env.TOTAL_PACKAGES_CREATED }}", "${{ env.TOTAL_PACKAGEVERSIONS_PUBLISHED }}", $GitHubRunUri
+        $Text = "The last publication of AVM Bicep modules succeeded. A total of {0} packages were created, {1} already existed and {2} new versions uploaded.`nCheck the GIT workflow run here: {3}" -f "${{ needs.publish.outputs.packagesCreatedOutcome }}", "${{ needs.publish.outputs.packagesExistedOutcome }}", "${{ needs.publish.outputs.packagesNewVersionsPublishedOutcome }}", $GitHubRunUri
         Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication succeeded." -Text $Text -MessageType "Success"
       shell: pwsh
       env:

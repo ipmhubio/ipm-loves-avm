@@ -44,8 +44,9 @@ If ($env:GITHUB_ENV)
   $TotalPackageVersionsPublished = 0
   $DataToExport = @"
 TOTAL_PACKAGES_CREATED={0}
-TOTAL_PACKAGES_FAILED={1}
-TOTAL_PACKAGEVERSIONS_PUBLISHED={2}
-"@ -f $TotalPackagesCreated, $TotalPackagesFailed, $TotalPackageVersionsPublished
+TOTAL_PACKAGES_ALREADY_EXISTED={1}
+TOTAL_PACKAGES_FAILED={2}
+TOTAL_PACKAGEVERSIONS_PUBLISHED={3}
+"@ -f $TotalPackagesCreated, $TotalPackagesAlreadyExists, $TotalPackagesFailed, $TotalPackageVersionsPublished
   $DataToExport | Out-File -FilePath $env:GITHUB_ENV -Encoding "UTF8"
 }
