@@ -94,22 +94,14 @@ jobs:
 
     - name: Extract the IPMHub packages from the archive
       run: |
-        ls -al
         unzip buildresults.zip -d .
         rm buildresults.zip
 
     - name: Publish all packages to IPMHub if required
       id: publish
       run: |
-        Get-ChildItem
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
-
-        if ($?) {
-          echo "outcome=success" >> $env:GITHUB_OUTPUT
-        } else {
-          echo "outcome=failure" >> $env:GITHUB_OUTPUT
-        }
       shell: pwsh
       env:
         PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
