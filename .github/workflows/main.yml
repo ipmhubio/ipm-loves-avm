@@ -19,8 +19,6 @@ jobs:
   build:
     name: Build IPMHub variant of AVM modules
     runs-on: ubuntu-latest
-    env:
-      ACTIONS_RUNNER_DEBUG: true
     outputs:
       testsOutcome: ${{ steps.test.outputs.outcome }}
     steps:
