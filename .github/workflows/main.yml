@@ -89,9 +89,9 @@ jobs:
 
     - name: Extract the IPMHub packages from the archive
       run: |
+        ls -al
         unzip buildresults.zip -d .
         rm buildresults.zip
-      working-directory: ./avm-buildresults
 
     - name: Publish all packages to IPMHub if required
       id: publish
