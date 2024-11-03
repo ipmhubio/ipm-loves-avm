@@ -47,7 +47,7 @@ jobs:
 
     - name: Test the IPMHub packages
       id: test
-      if: ${{ github.event.inputs.skipTests == false }}
+      if: ${{ github.event.inputs.skipTests == 'false' }}
       run: |
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
@@ -76,7 +76,7 @@ jobs:
     name: Publish IPMHub packages
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event.inputs.shouldPublish == true && needs.build.outputs.testsOutcome.outcome == 'success' }}
+    if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.testsOutcome.outcome == 'success' }}
     steps:
     - uses: actions/checkout@v4
       with:
