@@ -97,7 +97,7 @@ jobs:
       id: publish
       run: |
         Get-ChildItem
-        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "avm-buildresults"
+        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
 
         if ($?) {
@@ -106,7 +106,6 @@ jobs:
           echo "outcome=failure" >> $env:GITHUB_OUTPUT
         }
       shell: pwsh
-      working-directory: ./avm-buildresults
       env:
         PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
 
