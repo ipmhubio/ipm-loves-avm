@@ -40,8 +40,7 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
   "Publishing package '{0}' version '{1}'..." -f $Package.Name, $Package.Version | Write-Host
   Try
   {
-    & ipm publish -p "avm-bicep/$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
-
+    & ipm publish -p "avm-bicep/$($Package.Name)asds" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
     Write-Host "GO"
     exit 1
   }

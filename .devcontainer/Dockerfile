@@ -24,7 +24,7 @@ RUN \
   pwsh -Command Install-Module -Name "Pester" -Scope "AllUsers" -AllowClobber -Repository "${PSREPOSITORY}"
 
 # Install/Get IPM
-RUN curl -Lo /tmp/ipm.zip https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.zip && unzip /tmp/ipm.zip -d /usr/local/bin && rm /tmp/ipm.zip && chmod +x /usr/local/bin/ipm
+RUN curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.tar.gz && tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin && rm /tmp/ipm.tar.gz && chmod +x /usr/local/bin/ipm
 
 # Get required powershell modules
 RUN \

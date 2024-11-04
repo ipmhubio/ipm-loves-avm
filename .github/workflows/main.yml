@@ -103,12 +103,11 @@ jobs:
         unzip buildresults.zip -d .
         rm buildresults.zip
 
-
     - name: Download and install IPM binary
       run: |
-        curl -Lo /tmp/ipm.zip https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.zip && \
-        unzip /tmp/ipm.zip -d /usr/local/bin && \
-        rm /tmp/ipm.zip && \
+        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.tar.gz
+        tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin 
+        rm /tmp/ipm.tar.gz
         chmod +x /usr/local/bin/ipm
 
     - name: Publish all packages to IPMHub if required
@@ -116,18 +115,6 @@ jobs:
       run: |
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
-
-        # Get all files in the specified directory
-        $files = Get-ChildItem -Path "/home/runner/.config/IPMHub/ipmhubcli/logs/" -File
-
-        # Write the content of each file to the console
-        foreach ($file in $files)
-        {
-          Write-Output "Contents of file: $($file.FullName)"
-          Get-Content -Path $file.FullName | Write-Output
-          Write-Output "`n"
-        }
-
       shell: pwsh
       env:
         PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
