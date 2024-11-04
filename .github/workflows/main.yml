@@ -103,6 +103,10 @@ jobs:
         unzip buildresults.zip -d .
         rm buildresults.zip
 
+    - name: Download and install IPM dependencies
+      run: |
+        sudo apt-get update && sudo apt-get install -y gnome-keyring libsecret-1-0
+
     - name: Download and install IPM binary
       run: |
         curl -Lo /tmp/ipm.zip https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.zip && \
