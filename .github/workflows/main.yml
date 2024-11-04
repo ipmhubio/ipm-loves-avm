@@ -106,6 +106,7 @@ jobs:
     - name: Download and install IPM dependencies
       run: |
         sudo apt-get update && sudo apt-get install -y gnome-keyring libsecret-1-0
+        eval $(/usr/bin/gnome-keyring-daemon --start)
 
     - name: Download and install IPM binary
       run: |
