@@ -101,49 +101,57 @@ If ([String]::IsNullOrEmpty($FromCommit))
 } `
 Else
 {
-  # Retrieve all commits that were done after the given one, and retrieve the published modules on top of those commits.
-  # These can be found by their corresponding TAG.
-  $PublishedTags = Get-AvmGitFutureCommitsWithTags -AfterCommitId $FromCommit -ResourceModules -UtilityModules
-  Get-ChildItem -Path $AvmPackageBuildRoot | Remove-Item -Recurse -Force
-  ForEach($PublishedTagDetails in $PublishedTags)
+  # Check if the given commit is the last commit known
+  If ($FromCommit -eq (Get-GitAvmLastCommitId))
   {
-    "Retrieving module classified as a {0} from published tag '{1}' and commit '{2}'..." -f $PublishedTagDetails.Classification, $PublishedTagDetails.TagName, $PublishedTagDetails.CommitId | Write-Host -ForegroundColor "DarkGray"
-    "Switching local repo to tag '{0}'..." -f $PublishedTagDetails.TagName | Write-Host -ForegroundColor "DarkYellow"
-    & git checkout $PublishedTagDetails.TagName > $null 2>&1
-    $ModuleMetadataSingle = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $PublishedTagDetails.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
-    $ModuleChild = $ModuleMetadataSingle.Modules | Select-Object -First 1
-
-    If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
+    "The last state is the same as the current state. Stopping further actions." | Write-Host
+  } `
+  Else
+  {
+    # Retrieve all commits that were done after the given one, and retrieve the published modules on top of those commits.
+    # These can be found by their corresponding TAG.
+    $PublishedTags = Get-AvmGitFutureCommitsWithTags -AfterCommitId $FromCommit -ResourceModules -UtilityModules
+    Get-ChildItem -Path $AvmPackageBuildRoot | Remove-Item -Recurse -Force
+    ForEach($PublishedTagDetails in $PublishedTags)
     {
-      "Found AVM module '{0}', but this is on the ignore list. Skipping for copy." -f $AvmModule.AcrName | Write-Warning
-      Continue
-    }
+      "Retrieving module classified as a {0} from published tag '{1}' and commit '{2}'..." -f $PublishedTagDetails.Classification, $PublishedTagDetails.TagName, $PublishedTagDetails.CommitId | Write-Host -ForegroundColor "DarkGray"
+      "Switching local repo to tag '{0}'..." -f $PublishedTagDetails.TagName | Write-Host -ForegroundColor "DarkYellow"
+      & git checkout $PublishedTagDetails.TagName > $null 2>&1
+      $ModuleMetadataSingle = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $PublishedTagDetails.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
+      $ModuleChild = $ModuleMetadataSingle.Modules | Select-Object -First 1
 
-    $AvmModules.Add($ModuleChild) | Out-Null
+      If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
+      {
+        "Found AVM module '{0}', but this is on the ignore list. Skipping for copy." -f $AvmModule.AcrName | Write-Warning
+        Continue
+      }
 
-    # Filter referenced modules that we need to gather.
-    If ($ModuleMetadataSingle.ReferencedModules.Count -gt 0)
-    {
-      $ModuleChildReferencedModulesToRetrieve = [Array] ($ModuleMetadataSingle.ReferencedModules) ?? @()
-      "{0} referenced module(s) should be retrieved for this published tag." -f $ModuleChildReferencedModulesToRetrieve.Count | Write-Host -ForegroundColor "DarkGray"
-      $ModuleChildReferencedModulesToRetrieve | ForEach-Object {
-        If (-not ($_.Tag -in $ReferencedModulesToRetrieve.Tag))
-        {
-          $ReferencedModulesToRetrieve.Add($_) | Out-Null
+      $AvmModules.Add($ModuleChild) | Out-Null
+
+      # Filter referenced modules that we need to gather.
+      If ($ModuleMetadataSingle.ReferencedModules.Count -gt 0)
+      {
+        $ModuleChildReferencedModulesToRetrieve = [Array] ($ModuleMetadataSingle.ReferencedModules) ?? @()
+        "{0} referenced module(s) should be retrieved for this published tag." -f $ModuleChildReferencedModulesToRetrieve.Count | Write-Host -ForegroundColor "DarkGray"
+        $ModuleChildReferencedModulesToRetrieve | ForEach-Object {
+          If (-not ($_.Tag -in $ReferencedModulesToRetrieve.Tag))
+          {
+            $ReferencedModulesToRetrieve.Add($_) | Out-Null
+          }
         }
       }
+
+      # 03b. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
+      Copy-AvmModuleForBuild `
+        -AvmModule $ModuleChild `
+        -BuildRoot $AvmPackageBuildRoot `
+        -IpmHubOrganizationName $IpmHubOrganizationName `
+        -AdditionalFiles $AdditionalFiles `
+        -FailOnNonBuildableModule:($FailOnNonBuildableModule.IsPresent -and $True -eq $FailOnNonBuildableModule) `
+        -Verbose:$VerbosePreference
+
+      "" | Write-Host
     }
-
-    # 03b. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
-    Copy-AvmModuleForBuild `
-      -AvmModule $ModuleChild `
-      -BuildRoot $AvmPackageBuildRoot `
-      -IpmHubOrganizationName $IpmHubOrganizationName `
-      -AdditionalFiles $AdditionalFiles `
-      -FailOnNonBuildableModule:($FailOnNonBuildableModule.IsPresent -and $True -eq $FailOnNonBuildableModule) `
-      -Verbose:$VerbosePreference
-
-    "" | Write-Host
   }
 }
 

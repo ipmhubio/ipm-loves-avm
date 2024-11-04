@@ -9,10 +9,11 @@ Param(
 
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-to-ipm-module.psm1") -Force
 
-# 01. Get information from the build folder
+# 01. Get information from the build folder.
 $AvmBuildPublishSet = Get-AvmBuildPublishSet -AvmPackageBuildRoot $AvmPackageBuildRoot
 "Found {0} unique packages within the build folder, with a total of {1} versions." -f $AvmBuildPublishSet.UniquePackages.Count, $AvmBuildPublishSet.Packages.Count | Write-Host
 
+# 02. Ensure that all packages exist within the hub.
 "Ensuring that all packages exists within IPMHub..." | Write-Host
 $Res = Invoke-IpmHubPackageEnsurance -Packages $AvmBuildPublishSet.UniquePackages -PackageCreationApi $PackageCreationApi -Verbose:$VerbosePreference
 $PackagesCreated = [Array] ($Res | Where-Object { $_.statusCode -eq 201 }) ?? @()
@@ -31,13 +32,24 @@ Else
   Throw ("A total of {0} packages were created, {1} already existed and {2} failed." -f $TotalPackagesCreated, $TotalPackagesAlreadyExists, $TotalPackagesFailed)
 }
 
+# 03. Use IPM to publish new versions.
 "Publishing new versions..." | Write-Host
+$FailedPublications = @()
 ForEach($Package in $AvmBuildPublishSet.Packages)
 {
-  "ipm publish -p `"{0}`" -v `"{1}`" -f `"{2}`"" -f $Package.Name, $Package.Version, $Package.Path | Write-Host
+  "Publishing package '{0}' version '{1}'..." -f $Package.Name, $Package.Version | Write-Host
+  Try
+  {
+    & ipm publish -p "$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
+  }
+  Catch
+  {
+    "Package '{0}' version '{1}' publication failed due reason: {2}" -f $_.ToString() | Write-Warning
+    $FailedPublications += $Package
+  }  
 }
 
-# Save information about the total number of created packages and total number of uploaded packages
+# 04. Save information about the total number of created packages and total number of uploaded packages.
 If ($env:GITHUB_ENV)
 {
   $TotalPackageVersionsPublished = $AvmBuildPublishSet.Packages.Count
@@ -46,7 +58,8 @@ TOTAL_PACKAGES_CREATED={0}
 TOTAL_PACKAGES_ALREADY_EXISTED={1}
 TOTAL_PACKAGES_FAILED={2}
 TOTAL_PACKAGEVERSIONS_PUBLISHED={3}
-"@ -f $TotalPackagesCreated, $TotalPackagesAlreadyExists, $TotalPackagesFailed, $TotalPackageVersionsPublished
+TOTAL_PACKAGEVERSIONS_FAILED={4}
+"@ -f $TotalPackagesCreated, $TotalPackagesAlreadyExists, $TotalPackagesFailed, $TotalPackageVersionsPublished, $FailedPublications.Count
   $DataToExport | Out-File -FilePath $env:GITHUB_ENV -Encoding "UTF8"
 
   # Write outputs to GITHUB_OUTPUT (for use in other jobs)

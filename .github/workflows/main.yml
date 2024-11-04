@@ -20,6 +20,7 @@ jobs:
     name: Build IPMHub variant of AVM modules
     runs-on: ubuntu-latest
     outputs:
+      packagesBuildOutcome: ${{ steps.build.outputs.numberOfPackages }}
       testsOutcome: ${{ steps.test.outputs.outcome }}
     steps:
     - uses: actions/checkout@v4
@@ -35,12 +36,16 @@ jobs:
         tags: true
 
     - name: Prepare the AVM modules to become IPMHub acceptable
+      id: build
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $LastState = Get-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN"
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.TilCommitId -FailOnNonBuildableModule
+        
+        $NumberOfPackages = ([Array](Get-ChildItem -Path $AvmPackageBuildRoot -Directory) ?? @()).Count
+        echo ("numberOfPackages={0}" -f $NumberOfPackages) >> $env:GITHUB_OUTPUT
       shell: pwsh
       env:
         STATE_SAS_TOKEN: ${{ secrets.STATE_SAS_TOKEN }}
@@ -80,8 +85,9 @@ jobs:
       packagesExistedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGES_ALREADY_EXISTED }}
       packagesFailedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGES_FAILED }}
       packagesNewVersionsPublishedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_PUBLISHED }}
+      packagesNewVersionsPublishedFailedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_FAILED }}
     needs: build
-    if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.testsOutcome != 'failure' }}
+    if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.packagesBuildOutcome > 0 && needs.build.outputs.testsOutcome != 'failure' }}
     steps:
     - uses: actions/checkout@v4
       with:
@@ -97,6 +103,16 @@ jobs:
         unzip buildresults.zip -d .
         rm buildresults.zip
 
+    - name: Download and install IPM binary
+      run: |
+        curl -Lo /tmp/ipm.zip https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.zip && \
+        unzip /tmp/ipm.zip -d /usr/local/bin && \
+        rm /tmp/ipm.zip && \
+        chmod +x /usr/local/bin/ipm
+
+    - name: Verify IPM installation
+      run: ipm --version
+
     - name: Publish all packages to IPMHub if required
       id: publish
       run: |
@@ -105,6 +121,9 @@ jobs:
       shell: pwsh
       env:
         PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
+        IPM_CLIENT_ID: ${{ secrets.IPM_CLIENT_ID }}
+        IPM_CLIENT_TOKEN: ${{ secrets.IPM_CLIENT_SECRET }}
+        IPM_CLIENT_SCOPES: ${{ secrets.IPM_CLIENT_SCOPES }}
 
     - name: Update the publish state
       run: |
@@ -150,7 +169,7 @@ jobs:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
     - name: Notify on publication success
-      if: ${{ needs.publish.result == 'success' }}
+      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome > 0 }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
@@ -159,3 +178,14 @@ jobs:
       shell: pwsh
       env:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+    - name: Notify on nothing to publish
+      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome > 0 }}
+      run: |
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+        $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
+        $Text = "The last run succeeded, nothing to publish.`nCheck the GIT workflow run here: {0}" -f $GitHubRunUri
+        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication succeeded." -Text $Text -MessageType "Success"
+      shell: pwsh
+      env:
+        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}        
