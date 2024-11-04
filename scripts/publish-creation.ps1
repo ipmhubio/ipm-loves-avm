@@ -40,7 +40,7 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
   "Publishing package '{0}' version '{1}'..." -f $Package.Name, $Package.Version | Write-Host
   Try
   {
-    & ipm publish -p "$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization --consoleloglevel trace --consoledebugger true
+    & ipm publish -p "$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
     exit 1
   }
   Catch
