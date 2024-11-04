@@ -1,8 +1,8 @@
 {
   "debug.internalConsoleOptions": "neverOpen",
   "files.associations": {
-    "*.yml": "azure-pipelines",
-    "*.yaml": "azure-pipelines"
+    "*.yml": "YAML",
+    "*.yaml": "YAML"
   },
   "powershell.scriptAnalysis.settingsPath": "ScriptAnalyzerSettings.psd1",
   "powershell.scriptAnalysis.enable": true,

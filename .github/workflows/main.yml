@@ -43,7 +43,7 @@ jobs:
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.TilCommitId -FailOnNonBuildableModule
-        
+
         $NumberOfPackages = ([Array](Get-ChildItem -Path $AvmPackageBuildRoot -Directory) ?? @()).Count
         echo ("numberOfPackages={0}" -f $NumberOfPackages) >> $env:GITHUB_OUTPUT
       shell: pwsh
@@ -109,9 +109,6 @@ jobs:
         unzip /tmp/ipm.zip -d /usr/local/bin && \
         rm /tmp/ipm.zip && \
         chmod +x /usr/local/bin/ipm
-
-    - name: Verify IPM installation
-      run: ipm --version
 
     - name: Publish all packages to IPMHub if required
       id: publish
@@ -188,4 +185,4 @@ jobs:
         Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication succeeded." -Text $Text -MessageType "Success"
       shell: pwsh
       env:
-        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}        
+        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
