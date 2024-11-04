@@ -40,13 +40,14 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
   "Publishing package '{0}' version '{1}'..." -f $Package.Name, $Package.Version | Write-Host
   Try
   {
-    & ipm publish -p "$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
+    & ipm publish -p "$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization --consoleloglevel trace --consoledebugger true
+    exit 1
   }
   Catch
   {
     "Package '{0}' version '{1}' publication failed due reason: {2}" -f $_.ToString() | Write-Warning
     $FailedPublications += $Package
-  }  
+  }
 }
 
 # 04. Save information about the total number of created packages and total number of uploaded packages.
