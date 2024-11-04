@@ -4,5 +4,91 @@
       "name": "devtest-labs",
       "version": "all"
     }
+  ],
+  "nameReplacementments": [
+    {
+      "search": "azure-virtual-desktop",
+      "replacement": "avd"
+    },
+    {
+      "search": "azure-active-directory",
+      "replacement": "aad"
+    },
+    {
+      "search": "azure-",
+      "replacement": ""
+    },
+    {
+      "search": "kubernetes-service",
+      "replacement": ""
+    },
+    {
+      "search": "-configuration-",
+      "replacement": "-config-"
+    },
+    {
+      "search": "kubernetes-config-flux-configurations",
+      "replacement": "kubernetes-flux-configurations"
+    },
+    {
+      "search": "application-",
+      "replacement": "app-"
+    },
+    {
+      "search": "web-app-firewall",
+      "replacement": "waf"
+    },
+    {
+      "search": "cosmos-db-mongodb-vcore-cluster",
+      "replacement": "cosmos-db-for-mongodb"
+    },
+    {
+      "search": "dbforpostgresql-flexible-servers",
+      "replacement": "postgre-sql-flex-server"
+    },
+    {
+      "search": "container-instances-container-groups",
+      "replacement": "container-instance"
+    },
+    {
+      "search": "machine-learning-services-workspaces",
+      "replacement": "machine-learning-workspace"
+    },
+    {
+      "search": "operations-management-solutions",
+      "replacement": "ops-management-solution"
+    },
+    {
+      "search": "virtual-machine-image-templates",
+      "replacement": "vm-image-templates"
+    },
+    {
+      "search": "virtual-network-gateway-connections",
+      "replacement": "vnet-gateway-connections"
+    },
+    {
+      "search": "default-interface-types-for-avm-modules",
+      "replacement": "common-types"
+    },
+    {
+      "search": "diagnostic-settings-activity-logs-for-subscriptions",
+      "replacement": "insights-diagnostic-setting"
+    },
+    {
+      "search": "app-insights-linked-storage-account",
+      "replacement": "insights-collection-endpoint"
+    },    
+    {
+      "search": "web-firewall-waf",
+      "replacement": "web-waf"
+    },
+    {
+      "search": "waf-waf",
+      "replacement": "waf"
+    },
+    {
+      "search": "workspace",
+      "replacement": "avd-workspace"
+    }
   ]
 }

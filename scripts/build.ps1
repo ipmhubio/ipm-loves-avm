@@ -15,7 +15,13 @@ Param(
   [PsCustomObject[]] $AvmModulesToSkip = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).avmModulesToSkip),
 
   [Parameter(Mandatory = $False)]
-  [String] $FromCommit
+  [PsCustomObject[]] $IpmHubNameReplacements = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).nameReplacementments),
+
+  [Parameter(Mandatory = $False)]
+  [String] $FromCommit,
+
+  [Parameter(Mandatory = $False)]
+  [Switch] $FailOnNonBuildableModule
 )
 
 $ScriptFolder = $PSScriptRoot
@@ -23,7 +29,7 @@ Import-Module (Join-Path -Path $ScriptFolder -ChildPath "avm-to-ipm-module.psm1"
 $AvmSubFolder = Join-Path -Path $AvmRepositoryRootPath -ChildPath "avm"
 If (-not(Test-Path -Path $AvmSubFolder))
 {
-  Throw ("Could not find folder 'avm' within given path '{0}'." -f $AvmRepositoryRootPath) 
+  Throw ("Could not find folder 'avm' within given path '{0}'." -f $AvmRepositoryRootPath)
 }
 
 # Ensure the build folder exists.
@@ -54,25 +60,25 @@ $AdditionalFiles = @(
   [HashTable] @{
     RelativePath = "."
     Source = Join-Path -Path $ScriptFolder -ChildPath "DISCLAIMER.md"
-  },
+  }<#,
   [HashTable] @{
     RelativePath = "."
     Source = Join-Path -Path $ScriptFolder -ChildPath "bicepconfig.json"
-  }
+  }#>
 )
 
 # 03. Get a whole list of ALL AVM modules that can be found with as much as metadata that we can gather from this branch.
 If ([String]::IsNullOrEmpty($FromCommit))
 {
   "Retrieving all AVM modules within the main branch..." | Write-Host
-  $ModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -Verbose:$VerbosePreference
+  $ModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
   "Found a total of {0} AVM modules, with {1} referenced modules within the main branch." -f $ModuleMetadata.Modules.Count, $ModuleMetadata.ReferencedModules.Count | Write-Host
 
   # Filter referenced modules that we still need to gather.
   $AllReferencedModulesToRetrieve = [Array] ($ModuleMetadata.ReferencedModules | Where-Object { $False -eq $_.IsPresent }) ?? @()
   "{0} referenced modules are not available within the main branch." -f $AllReferencedModulesToRetrieve.Count | Write-Host
   $ReferencedModulesToRetrieve.AddRange($AllReferencedModulesToRetrieve)
-  
+
   # 03b. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
   Get-ChildItem -Path $AvmPackageBuildRoot | Remove-Item -Recurse -Force
   ForEach($AvmModule in $ModuleMetadata.Modules)
@@ -84,7 +90,13 @@ If ([String]::IsNullOrEmpty($FromCommit))
     }
 
     $AvmModules.Add($AvmModule) | Out-Null
-    Copy-AvmModuleForBuild -AvmModule $AvmModule -BuildRoot $AvmPackageBuildRoot -IpmHubOrganizationName $IpmHubOrganizationName -AdditionalFiles $AdditionalFiles
+    Copy-AvmModuleForBuild `
+      -AvmModule $AvmModule `
+      -BuildRoot $AvmPackageBuildRoot `
+      -IpmHubOrganizationName $IpmHubOrganizationName `
+      -AdditionalFiles $AdditionalFiles `
+      -FailOnNonBuildableModule:($FailOnNonBuildableModule.IsPresent -and $True -eq $FailOnNonBuildableModule) `
+      -Verbose:$VerbosePreference
   }
 } `
 Else
@@ -98,7 +110,7 @@ Else
     "Retrieving module classified as a {0} from published tag '{1}' and commit '{2}'..." -f $PublishedTagDetails.Classification, $PublishedTagDetails.TagName, $PublishedTagDetails.CommitId | Write-Host -ForegroundColor "DarkGray"
     "Switching local repo to tag '{0}'..." -f $PublishedTagDetails.TagName | Write-Host -ForegroundColor "DarkYellow"
     & git checkout $PublishedTagDetails.TagName > $null 2>&1
-    $ModuleMetadataSingle = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $PublishedTagDetails.Name -Verbose:$VerbosePreference
+    $ModuleMetadataSingle = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $PublishedTagDetails.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
     $ModuleChild = $ModuleMetadataSingle.Modules | Select-Object -First 1
 
     If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
@@ -114,16 +126,22 @@ Else
     {
       $ModuleChildReferencedModulesToRetrieve = [Array] ($ModuleMetadataSingle.ReferencedModules) ?? @()
       "{0} referenced module(s) should be retrieved for this published tag." -f $ModuleChildReferencedModulesToRetrieve.Count | Write-Host -ForegroundColor "DarkGray"
-      $ModuleChildReferencedModulesToRetrieve | ForEach-Object { 
+      $ModuleChildReferencedModulesToRetrieve | ForEach-Object {
         If (-not ($_.Tag -in $ReferencedModulesToRetrieve.Tag))
         {
           $ReferencedModulesToRetrieve.Add($_) | Out-Null
         }
-      }      
+      }
     }
 
     # 03b. Per AVM module, we can start a 'build' preparation to another location. From there we check for other missing components
-    Copy-AvmModuleForBuild -AvmModule $ModuleChild -BuildRoot $AvmPackageBuildRoot -IpmHubOrganizationName $IpmHubOrganizationName -AdditionalFiles $AdditionalFiles
+    Copy-AvmModuleForBuild `
+      -AvmModule $ModuleChild `
+      -BuildRoot $AvmPackageBuildRoot `
+      -IpmHubOrganizationName $IpmHubOrganizationName `
+      -AdditionalFiles $AdditionalFiles `
+      -FailOnNonBuildableModule:($FailOnNonBuildableModule.IsPresent -and $True -eq $FailOnNonBuildableModule) `
+      -Verbose:$VerbosePreference
 
     "" | Write-Host
   }
@@ -136,18 +154,24 @@ If ($ReferencedModulesToRetrieve.Count -gt 0)
   $ReferencedModulesToRetrieve | ForEach-Object { $ReferencestoRetrieveQueue.Enqueue($_) }
 
   "Starting creating builds for referenced modules. The queue now holds {0} items..." -f $ReferencestoRetrieveQueue.Count | Write-Host
-  While ($ReferencestoRetrieveQueue.Count -gt 0) 
+  While ($ReferencestoRetrieveQueue.Count -gt 0)
   {
     $RefModule = $ReferencestoRetrieveQueue.Dequeue()
 
     "Retrieving referenced module '{0}' version '{1}'..." -f $RefModule.Name, $RefModule.Version | Write-Host -ForegroundColor "DarkGray"
     "Switching local repo to tag '{0}'..." -f $RefModule.Tag | Write-Host -ForegroundColor "DarkYellow"
     & git checkout $RefModule.Tag > $null 2>&1
-    $RefModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $RefModule.Name -Verbose:$VerbosePreference
+    $RefModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $RefModule.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
 
     "Building referenced module '{0}' version '{1}'..." -f $RefModule.Name, $RefModule.Version | Write-Host -ForegroundColor "DarkGray"
     $RefModuleChild = $RefModuleMetadata.Modules | Select-Object -First 1
-    Copy-AvmModuleForBuild -AvmModule $RefModuleChild -BuildRoot $AvmPackageBuildRoot -IpmHubOrganizationName $IpmHubOrganizationName -AdditionalFiles $AdditionalFiles -Verbose:$VerbosePreference
+    Copy-AvmModuleForBuild `
+      -AvmModule $RefModuleChild `
+      -BuildRoot $AvmPackageBuildRoot `
+      -IpmHubOrganizationName $IpmHubOrganizationName `
+      -AdditionalFiles $AdditionalFiles `
+      -FailOnNonBuildableModule:($FailOnNonBuildableModule.IsPresent -and $True -eq $FailOnNonBuildableModule) `
+      -Verbose:$VerbosePreference
 
     # If this module also has nested modules, we should add this to the queue.
     $InnerReferencedModulesToRetrieve = [Array] ($RefModuleMetadata.ReferencedModules) ?? @()

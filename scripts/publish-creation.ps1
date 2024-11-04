@@ -10,14 +10,11 @@ Param(
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-to-ipm-module.psm1") -Force
 
 # 01. Get information from the build folder
-$PackagesWithinBuildFolder = Get-ChildItem -Path $AvmPackageBuildRoot -Directory
-"Found {0} packages within the build folder." -f $PackagesWithinBuildFolder.Count | Write-Host
-
-$BuildResults = Get-Content -Path (Join-Path -Path $AvmPackageBuildRoot -ChildPath "results.json") -Encoding "UTF8" | ConvertFrom-Json -Depth 100
-$Modules = $BuildResults.Modules | ForEach-Object { [PsCustomObject] @{ Name = $_.IpmHubName; Description = $_.Description }}
+$AvmBuildPublishSet = Get-AvmBuildPublishSet -AvmPackageBuildRoot $AvmPackageBuildRoot
+"Found {0} unique packages within the build folder, with a total of {1} versions." -f $AvmBuildPublishSet.UniquePackages.Count, $AvmBuildPublishSet.Packages.Count | Write-Host
 
 "Ensuring that all packages exists within IPMHub..." | Write-Host
-$Res = Invoke-IpmHubPackageEnsurance -Packages $Modules -PackageCreationApi $PackageCreationApi -Verbose:$VerbosePreference
+$Res = Invoke-IpmHubPackageEnsurance -Packages $AvmBuildPublishSet.UniquePackages -PackageCreationApi $PackageCreationApi -Verbose:$VerbosePreference
 $PackagesCreated = [Array] ($Res | Where-Object { $_.statusCode -eq 201 }) ?? @()
 $PackagesExists = [Array] ($Res | Where-Object { $_.statusCode -eq 200 }) ?? @()
 $PackagesFailed = [Array] ($Res | Where-Object { $_.statusCode -ge 400 }) ?? @()
@@ -34,14 +31,16 @@ Else
   Throw ("A total of {0} packages were created, {1} already existed and {2} failed." -f $TotalPackagesCreated, $TotalPackagesAlreadyExists, $TotalPackagesFailed)
 }
 
-
 "Publishing new versions..." | Write-Host
-# TODO - Publish new versions through ipm
+ForEach($Package in $AvmBuildPublishSet.Packages)
+{
+  "ipm publish -p `"{0}`" -v `"{1}`" -f `"{2}`"" -f $Package.Name, $Package.Version, $Package.Path | Write-Host
+}
 
 # Save information about the total number of created packages and total number of uploaded packages
 If ($env:GITHUB_ENV)
 {
-  $TotalPackageVersionsPublished = 0
+  $TotalPackageVersionsPublished = $AvmBuildPublishSet.Packages.Count
   $DataToExport = @"
 TOTAL_PACKAGES_CREATED={0}
 TOTAL_PACKAGES_ALREADY_EXISTED={1}

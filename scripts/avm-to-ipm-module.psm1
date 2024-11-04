@@ -367,7 +367,10 @@ Function Get-AvmModuleMetadata
     [Switch] $UtilityModules,
 
     [Parameter(Mandatory = $False)]
-    [String[]] $FilterByPublicName
+    [String[]] $FilterByPublicName,
+
+    [Parameter(Mandatory = $False)]
+    [PsCustomObject[]] $IpmHubNameReplacements
   )
 
   $AvmResFolderRoot = Join-Path $AvmRootFolder -ChildPath "res"
@@ -376,82 +379,6 @@ Function Get-AvmModuleMetadata
 
   # 01. We first need to gather the list of published AVM modules from the current branch
   $AvmPublishedModuleListLatest = Get-AvmGitRepositoryPublishedModules -ResourceModules -UtilityModules | Where-Object { $True -eq $_.IsLatest } | Select-Object -ExcludeProperty "IsLatest"
-
-  # TODO: This list should be in a json configuration / mapping file.
-  $IpmHubNameReplacements = @(
-    @{
-      Search = "azure-virtual-desktop"
-      Replace = "avd"
-    }
-    @{
-      Search = "azure-active-directory"
-      Replace ="aad"
-    }
-    @{
-      Search = "azure-"
-      Replace = ""
-    }
-    @{
-      Search = "kubernetes-service"
-      Replace = ""
-    }
-    @{
-      Search = "-configuration-"
-      Replace = "-config-"
-    }
-    @{
-      Search = "kubernetes-config-flux-configurations"
-      Replace = "kubernetes-flux-configurations"
-    }
-    @{
-      Search = "application-"
-      Replace = "app-"
-    }
-    @{
-      Search = "web-app-firewall"
-      Replace = "waf"
-    }
-    @{
-      Search = "cosmos-db-mongodb-vcore-cluster"
-      Replace = "cosmos-db-for-mongodb"
-    }
-    @{
-      Search = "dbforpostgresql-flexible-servers"
-      Replace ="postgre-sql-flex-server"
-    }
-    @{
-      Search = "container-instances-container-groups"
-      Replace = "container-instance"
-    }
-    @{
-      Search = "machine-learning-services-workspaces"
-      Replace = "machine-learning-workspace"
-    }
-    @{
-      Search = "operations-management-solutions"
-      Replace = "ops-management-solution"
-    }
-    @{
-      Search = "virtual-machine-image-templates"
-      Replace = "vm-image-templates"
-    }
-    @{
-      Search = "virtual-network-gateway-connections"
-      Replace = "vnet-gateway-connections"
-    }
-    @{
-      Search = "default-interface-types-for-avm-modules"
-      Replace = "common-types"
-    }
-    @{
-      Search = "diagnostic-settings-activity-logs-for-subscriptions"
-      Replace = "insights-diagnostic-setting"
-    }
-    @{
-      Search = "app-insights-linked-storage-account"
-      Replace = "insights-collection-endpoint"
-    }
-  )
 
   $Modules = [System.Collections.ArrayList]@()
   $Modules.Clear()
@@ -537,12 +464,19 @@ Function Get-AvmModuleMetadata
     # Lets try to get our exact module version from our git history
     $ExactAvmModule = $AvmPublishedModuleListLatest | Where-Object { $_.Name -eq $ReadmePublicBicepRegistryIdentification } | Select-Object -First 1
 
-    # Extact our description from the BICEP file. We have 2 variants, single line and multiline.
+    # Extract our description from the BICEP file. We have 2 variants, single line and multiline.
     $Description = ($BicepFileContent | Where-Object { $_ -like "metadata description =*" } | Select-Object -First 1) -replace "metadata\s*description\s*=\s*", ""
-    If ($Description -eq "'''") # Multiline
+    If ($Description -like "'''*") # Multiline
     {
-      # TODO: Support multiline descriptions (for now, only found within the utl types)
-      $Description = ""
+      If ($Description -ne "'''") # Only found within the common types for now
+      {
+        $Description = $Description.Replace("'''", "")
+      } `
+      Else
+      {
+        # TODO: Support multiline descriptions
+        $Description = ""
+      }      
     } `
     Else
     {
@@ -572,7 +506,7 @@ Function Get-AvmModuleMetadata
     # Now make sure that our ipm hub gets possible replacements
     ForEach($Replacement in $IpmHubNameReplacements)
     {
-      $ModuleToAdd.IpmHubName = $ModuleToAdd.IpmHubName -replace $Replacement.Search, $Replacement.Replace
+      $ModuleToAdd.IpmHubName = $ModuleToAdd.IpmHubName -replace $Replacement.search, $Replacement.replacement
     }
 
     $ModuleToAdd.IpmHubName = $ModuleToAdd.IpmHubName.TrimStart('-').TrimEnd('-')
@@ -860,12 +794,25 @@ Function Copy-AvmModuleForBuild
     [String] $IpmHubOrganizationName,
 
     [Parameter(Mandatory = $False)]
-    [HashTable[]] $AdditionalFiles
+    [HashTable[]] $AdditionalFiles,
+
+    [Parameter(Mandatory = $False)]
+    [Switch] $FailOnNonBuildableModule
   )
+
+  Function FailOrWarning($Message)
+  {
+    If ($FailOnNonBuildableModule.IsPresent -and $True -eq $FailOnNonBuildableModule)
+    {
+      Throw $Message
+    }
+    
+    $Message | Write-Warning
+  }
 
   If ($AvmModule.IpmHubName.Length -gt 30)
   {
-    "Cannot build package '{0}'. Its name size exceeds 30 characters. AVM name: '{1}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName | Write-Warning
+    FailOrWarning("Cannot build package '{0}'. Its name size exceeds 30 characters. AVM name: '{1}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName)
     Return
   }
 
@@ -873,7 +820,7 @@ Function Copy-AvmModuleForBuild
   If (($AvmModule.Version -split "\.").Count -ne 3)
   {
     $VersionValue = $AvmModule.Version | ConvertTo-Json -Depth 2
-    "Cannot build package '{0}'. No published version found. AVM name: '{1}', version value: '{2}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName, $VersionValue | Write-Warning
+    FailOrWarning("Cannot build package '{0}'. No published version found. AVM name: '{1}', version value: '{2}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName, $VersionValue)
     Return
   }
 
@@ -1183,6 +1130,85 @@ Function Set-AvmBicepPublishState
   }
 }
 
+Function Get-AvmBuildPublishSet
+{
+  [OutputType([PsCustomObject])]
+  [CmdletBinding()]
+  Param(
+    [Parameter(Mandatory = $True)]
+    [String] $AvmPackageBuildRoot
+  )
+
+  # 01. Get information from the build folder
+  $PackagesWithinBuildFolder = Get-ChildItem -Path $AvmPackageBuildRoot -Directory
+  "Found {0} packages within the build folder." -f $PackagesWithinBuildFolder.Count | Write-Verbose
+
+  $BuildResults = Get-Content -Path (Join-Path -Path $AvmPackageBuildRoot -ChildPath "results.json") -Encoding "UTF8" | ConvertFrom-Json -Depth 100
+  $UniquePackages = $BuildResults.Modules | ForEach-Object { [PsCustomObject] @{ Name = $_.IpmHubName; Description = $_.Description }}
+
+  # 02. Traverse the build folder to look for packages to publish
+  $ToPublish = Get-ChildItem -Path $AvmPackageBuildRoot -Recurse -Depth 1 | Where-Object { $_.Name -match "\d\.\d\.\d" } | ForEach-Object {
+    $Name = Split-Path -Path (Split-Path -Path $_.FullName -Parent) -Leaf
+    $IpmHubJsonPath = Join-Path -Path $_.FullName -ChildPath "ipmhub.json"
+    $DependsOn = @()
+    If (Test-Path -Path $IpmHubJsonPath)
+    {
+      $DependsOn = Get-Content -Path $IpmHubJsonPath -Raw -Encoding "UTF8" | ConvertFrom-Json -Depth 10 | Select-Object -ExpandProperty "packages" | ForEach-Object {
+        @{
+          Name = $_.name -replace "avm-bicep\/", ""
+          Version = $_.version
+        }
+      }
+    }
+  
+    [PsCustomObject] @{
+      Name = $Name
+      Version = Split-Path -Path $_.FullName -Leaf
+      Path = $_.FullName
+      DependsOn = $DependsOn
+      PublicationOrder = 0
+      Description = $UniqueModules | Where-Object { $_.Name -eq $Name } | Select-Object -First 1 -ExpandProperty "Description"
+    }
+  }
+
+  # 03. Define our publication order
+  $PubOrder = @()
+  $PubIndex = 1
+  $ModulesToDo = [System.Collections.Queue]::new()
+  $ToPublish | Where-Object { $_.DependsOn.Count -eq 0 } | ForEach-Object { $_.PublicationOrder = $PubIndex++; $PubOrder += $_ }
+  $ToPublish | Where-Object { $_.DependsOn.Count -gt 0 } | ForEach-Object { $ModulesToDo.Enqueue($_) }
+  
+  While ($ModulesToDo.Count -gt 0)
+  {
+    $Module = $ModulesToDo.Dequeue()
+    $AllPresent = $True
+    ForEach($Dep in $Module.DependsOn)
+    {
+      $InList = $PubOrder | Where-Object { $_.Name -eq $Dep.Name -and $_.Version -eq $Dep.Version }
+      If ($Null -eq $Inlist)
+      {
+        $AllPresent = $False
+      }
+    }
+  
+    If ($AllPresent)
+    {
+      $Module.PublicationOrder = $PubIndex++
+      $PubOrder += $Module
+    } `
+    Else
+    {
+      # Put back on queue
+      $ModulesToDo.Enqueue($Module)
+    }
+  }
+  
+  [PsCustomObject] @{
+    Packages = $PubOrder
+    UniquePackages = $UniquePackages
+  }
+}
+
 Function Invoke-IpmHubPackageEnsurance
 {
   [OutputType([PsCustomObject[]])]
@@ -1413,5 +1439,6 @@ Export-ModuleMember -Function "Get-AvmModuleMetadata"
 Export-ModuleMember -Function "Copy-AvmModuleForBuild"
 Export-ModuleMember -Function "Get-AvmBicepPublishState"
 Export-ModuleMember -Function "Set-AvmBicepPublishState"
+Export-ModuleMember -Function "Get-AvmBuildPublishSet"
 Export-ModuleMember -Function "Invoke-IpmHubPackageEnsurance"
 Export-ModuleMember -Function "Send-MicrosoftTeamsChannelMessage"
