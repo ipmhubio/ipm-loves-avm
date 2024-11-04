@@ -116,6 +116,18 @@ jobs:
       run: |
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
+
+        # Get all files in the specified directory
+        $files = Get-ChildItem -Path "/home/runner/.config/IPMHub/ipmhubcli/logs/" -File
+
+        # Write the content of each file to the console
+        foreach ($file in $files)
+        {
+          Write-Output "Contents of file: $($file.FullName)"
+          Get-Content -Path $file.FullName | Write-Output
+          Write-Output "`n"
+        }
+
       shell: pwsh
       env:
         PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
