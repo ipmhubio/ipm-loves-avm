@@ -1,6 +1,8 @@
 name: Maintain IPMHub AVM modules
 
 on:
+  schedule:
+    - cron: '0 6 * * *' # Every day at 06.00
   workflow_dispatch:
     inputs:
       skipTests:
@@ -12,7 +14,7 @@ on:
       shouldPublish:
         description: 'Should publish the build results?'
         required: true
-        default: false
+        default: true
         type: boolean
 
 jobs:
@@ -106,9 +108,9 @@ jobs:
     - name: Download and install IPM binary
       run: |
         curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.tar.gz
-        tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin 
+        sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
         rm /tmp/ipm.tar.gz
-        chmod +x /usr/local/bin/ipm
+        sudo chmod +x /usr/local/bin/ipm
 
     - name: Publish all packages to IPMHub if required
       id: publish
