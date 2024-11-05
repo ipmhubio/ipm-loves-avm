@@ -37,12 +37,18 @@ Else
 $FailedPublications = @()
 ForEach($Package in $AvmBuildPublishSet.Packages)
 {
+  $PackageHubInfo = $Res | Where-Object { $_.packageName -eq $Package.FullName } | Select-Object -First 1
+  $PackageHubVersions = [Array] ($PackageHubInfo.versions) ?? @()
+  If ($PackageHubVersions -contains $Package.Version)
+  {
+    "Package '{0}' version '{1}' already exists within IPMHub. Skipping." | Write-Warning
+    Continue
+  }
+
   "Publishing package '{0}' version '{1}'..." -f $Package.Name, $Package.Version | Write-Host
   Try
   {
     & ipm publish -p "avm-bicep/$($Package.Name)asds" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
-    Write-Host "GO"
-    exit 1
   }
   Catch
   {

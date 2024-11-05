@@ -476,7 +476,7 @@ Function Get-AvmModuleMetadata
       {
         # TODO: Support multiline descriptions
         $Description = ""
-      }      
+      }
     } `
     Else
     {
@@ -806,7 +806,7 @@ Function Copy-AvmModuleForBuild
     {
       Throw $Message
     }
-    
+
     $Message | Write-Warning
   }
 
@@ -1160,9 +1160,10 @@ Function Get-AvmBuildPublishSet
         }
       }
     }
-  
+
     [PsCustomObject] @{
       Name = $Name
+      FullName = "avm-bicep/{0}" -f $Name
       Version = Split-Path -Path $_.FullName -Leaf
       Path = $_.FullName
       DependsOn = $DependsOn
@@ -1177,7 +1178,7 @@ Function Get-AvmBuildPublishSet
   $ModulesToDo = [System.Collections.Queue]::new()
   $ToPublish | Where-Object { $_.DependsOn.Count -eq 0 } | ForEach-Object { $_.PublicationOrder = $PubIndex++; $PubOrder += $_ }
   $ToPublish | Where-Object { $_.DependsOn.Count -gt 0 } | ForEach-Object { $ModulesToDo.Enqueue($_) }
-  
+
   While ($ModulesToDo.Count -gt 0)
   {
     $Module = $ModulesToDo.Dequeue()
@@ -1190,7 +1191,7 @@ Function Get-AvmBuildPublishSet
         $AllPresent = $False
       }
     }
-  
+
     If ($AllPresent)
     {
       $Module.PublicationOrder = $PubIndex++
@@ -1202,7 +1203,7 @@ Function Get-AvmBuildPublishSet
       $ModulesToDo.Enqueue($Module)
     }
   }
-  
+
   [PsCustomObject] @{
     Packages = $PubOrder
     UniquePackages = $UniquePackages
