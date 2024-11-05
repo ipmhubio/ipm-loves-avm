@@ -13,7 +13,7 @@ ENV POWERSHELL_TELEMETRY_OPTOUT=1
 # Update OS
 RUN \
   apt-get update && \
-  apt-get -y install ca-certificates curl apt-transport-https lsb-release gnupg curl unzip git
+  apt-get -y install ca-certificates curl apt-transport-https lsb-release gnupg curl unzip git dos2unix
 
 # Download & Install latest version of BICEP
 RUN curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
@@ -45,7 +45,7 @@ VOLUME [ "/workingfolder/src" ]
 COPY entrypoint.sh /entrypoint.sh
 COPY run-build.sh /run-build.sh
 COPY run-build-tests.sh /run-build-tests.sh
-RUN chmod +x /entrypoint.sh /run-build.sh /run-build-tests.sh
+RUN chmod +x /entrypoint.sh /run-build.sh /run-build-tests.sh && dos2unix /run-build.sh && dos2unix /run-build-tests.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
