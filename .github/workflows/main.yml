@@ -54,7 +54,7 @@ jobs:
 
     - name: Test the IPMHub packages
       id: test
-      if: ${{ github.event.inputs.skipTests == 'false' }}
+      if: ${{ github.event.inputs.skipTests == 'false' || github.event.inputs.skipTests == null }}
       run: |
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
@@ -89,7 +89,7 @@ jobs:
       packagesNewVersionsPublishedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_PUBLISHED }}
       packagesNewVersionsPublishedFailedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_FAILED }}
     needs: build
-    if: ${{ github.event.inputs.shouldPublish == 'true' && needs.build.outputs.packagesBuildOutcome > 0 && needs.build.outputs.testsOutcome != 'failure' }}
+    if: ${{ (github.event.inputs.shouldPublish == 'true' || github.event.inputs.shouldPublish == null) && needs.build.outputs.packagesBuildOutcome > 0 && needs.build.outputs.testsOutcome != 'failure' }}
     steps:
     - uses: actions/checkout@v4
       with:
