@@ -34,13 +34,10 @@ While($IPMHubConfigurationFilesQueue.Count -gt 0)
 {
   $ConfigurationFile = $IPMHubConfigurationFilesQueue.Dequeue()
   $ConfigurationFileObj = Get-Content -Path $ConfigurationFile.FullName -Encoding "UTF8" -Raw | ConvertFrom-Json -Depth 10
-  $PackageVersionRootPath = $ConfigurationFile.Directory.FullName
-  $PackageRootPath = Split-Path -Path $ConfigurationFile.Directory -Parent
-  $PackageName = Split-Path -Path $PackageRootPath -Leaf
-  $PackageVersion = Split-Path $PackageVersionRootPath -Leaf
+  $RelativePath = $ConfigurationFile.FullName.Replace($TestRootPath, "").replace("ipmhub.json", "")
   $PackagePackagesFolder = Join-Path -Path $ConfigurationFile.Directory -ChildPath 'packages'
 
-  "Preparing package '{0}' version '{1}'..." -f $PackageName, $PackageVersion | Write-Host
+  "Preparing IPMHub workspace for folder '{0}'..." -f $RelativePath | Write-Host
 
   # 03a. Check if the 'packages' folder exists for this package. If not, create it.
   If (-not (Test-Path -Path $PackagePackagesFolder -PathType "Container")) 
@@ -56,7 +53,7 @@ While($IPMHubConfigurationFilesQueue.Count -gt 0)
     $NestedPackageRootPath = Join-Path $TestRootPath -ChildPath $NestedPackageName
     If (-not (Test-Path -Path $NestedPackageRootPath))
     {
-      Throw ("Could not find nested package '{0}' for package '{1}' within the test folder. Cannot proceed." -f $NestedPackageName, $PackageName)
+      Throw ("Could not find nested package '{0}' for IPMHub workspace '{1}' within the test folder. Cannot proceed." -f $NestedPackageName, $RelativePath)
     }
 
     $Versions = $NestedPackage.versions ?? @($NestedPackage.version)
