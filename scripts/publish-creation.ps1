@@ -41,7 +41,7 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
   $PackageHubVersions = [Array] ($PackageHubInfo.versions) ?? @()
   If ($PackageHubVersions -contains $Package.Version)
   {
-    "Package '{0}' version '{1}' already exists within IPMHub. Skipping." | Write-Warning
+    "Package '{0}' version '{1}' already exists within IPMHub. Skipping." -f $Package.Name, $Package.Version | Write-Warning
     Continue
   }
 
