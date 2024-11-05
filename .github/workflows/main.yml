@@ -179,7 +179,7 @@ jobs:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
     - name: Notify on nothing to publish
-      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome > 0 }}
+      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome < 1 }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
