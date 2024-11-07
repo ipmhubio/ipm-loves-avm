@@ -1204,6 +1204,12 @@ Function Get-AvmBuildPublishSet
     }
   }
 
+  # 04. Append nested packages information to our subset of unique pages, if required.
+  $PackageNamesMissing = $ToPublish.Name | Where-Object { $UniquePackages.Name -notcontains $_ } | Select-Object -Unique
+  $PackageNamesMissing | ForEach-Object {
+    $UniquePackages += [PsCustomObject] @{ Name = $_; Description = "" }
+  }
+
   [PsCustomObject] @{
     Packages = $PubOrder
     UniquePackages = $UniquePackages
