@@ -158,7 +158,7 @@ jobs:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
     - name: Notify on publication failure
-      if: ${{ needs.publish.result == 'failure' }}
+      if: ${{ needs.publish.result == 'failure' || needs.publish.outputs.packagesNewVersionsPublishedFailedOutcome > 0 }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
@@ -168,7 +168,7 @@ jobs:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
     - name: Notify on publication success
-      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome > 0 }}
+      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome > 0 && needs.publish.outputs.packagesNewVersionsPublishedFailedOutcome == 0 }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
@@ -179,12 +179,12 @@ jobs:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
     - name: Notify on nothing to publish
-      if: ${{ needs.publish.result == 'success' && needs.build.outputs.packagesBuildOutcome < 1 }}
+      if: ${{ needs.build.outputs.packagesBuildOutcome < 1 && (needs.publish.result == 'success' || needs.publish.result == 'skipped') }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
         $Text = "The last run succeeded, nothing to publish.`nCheck the GIT workflow run here: {0}" -f $GitHubRunUri
-        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication succeeded." -Text $Text -MessageType "Success"
+        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication skipped." -Text $Text -MessageType "Success"
       shell: pwsh
       env:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
