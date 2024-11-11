@@ -871,16 +871,24 @@ Function Copy-AvmModuleForBuild
         }
 
         $ModuleTypes = @("res", "ptn", "utl")
+        $RefVersionAddition = "" 
+
         ForEach($RefVersion in $Ref.Versions)
         {
+          # If multiple versions for the same referenced module are targeted, we can assume IPM will use the multiple strategy.
+          if ($Ref.Versions.Count -gt 1)
+          {
+            $RefVersionAddition = "/{0}" -f $RefVersion
+          }
+          
           ForEach($ModuleType in ($ModuleTypes))
           {
             $Find = [RegEx]::Escape(("``br/public:avm/{0}/{1}:{2}`` | Remote Reference |" -f $ModuleType, $Ref.Name, $RefVersion))
-            $Replace = "``{0}packages/{1}/main.bicep`` | Local Reference |" -f $RefRelativePath, $RefIpmHubName
+            $Replace = "``{0}packages/{1}{2}/main.bicep`` | Local Reference |" -f $RefRelativePath, $RefIpmHubName, $RefVersionAddition
             $FileContent = $FileContent -replace $Find, $Replace
 
             $Find = [RegEx]::Escape(("'br/public:avm/{0}/{1}:{2}'" -f $ModuleType, $Ref.Name, $RefVersion))
-            $Replace = "'{0}packages/{1}/main.bicep'" -f $RefRelativePath, $RefIpmHubName
+            $Replace = "'{0}packages/{1}{2}/main.bicep'" -f $RefRelativePath, $RefIpmHubName, $RefVersionAddition
             $FileContent = $FileContent -replace $Find, $Replace
           }
         }
@@ -1148,16 +1156,23 @@ Function Get-AvmBuildPublishSet
 
   # 02. Traverse the build folder to look for packages to publish
   $ToPublish = Get-ChildItem -Path $AvmPackageBuildRoot -Recurse -Depth 1 | Where-Object { $_.Name -match "\d+\.\d+\.\d+" } | ForEach-Object {
-    $Name = Split-Path -Path (Split-Path -Path $_.FullName -Parent) -Leaf
-    $IpmHubJsonPath = Join-Path -Path $_.FullName -ChildPath "ipmhub.json"
+    $ToPublishRoot = $_
+    $Name = Split-Path -Path (Split-Path -Path $ToPublishRoot.FullName -Parent) -Leaf
+    $IpmHubJsonPath = Join-Path -Path $ToPublishRoot.FullName -ChildPath "ipmhub.json"
     $DependsOn = @()
     If (Test-Path -Path $IpmHubJsonPath)
     {
-      $DependsOn = Get-Content -Path $IpmHubJsonPath -Raw -Encoding "UTF8" | ConvertFrom-Json -Depth 10 | Select-Object -ExpandProperty "packages" | ForEach-Object {
-        @{
-          Name = $_.name -replace "avm-bicep\/", ""
-          Version = $_.version
-        }
+      $IpmHubJsonObjPackages = Get-Content -Path $IpmHubJsonPath -Raw -Encoding "UTF8" | ConvertFrom-Json -Depth 10 | Select-Object -ExpandProperty "packages"
+      ForEach($Package in $IpmHubJsonObjPackages)
+      {
+        $Versions = [Array] ($Package.versions ?? @($Package.version))
+        ForEach($Version in $Versions)
+        {
+          $DependsOn += @{
+            Name = $Package.name -replace "avm-bicep\/", ""
+            Version = $Version
+          }
+        }        
       }
     }
 
@@ -1165,10 +1180,10 @@ Function Get-AvmBuildPublishSet
       Name = $Name
       FullName = "avm-bicep/{0}" -f $Name
       Version = Split-Path -Path $_.FullName -Leaf
-      Path = $_.FullName
+      Path = $ToPublishRoot.FullName
       DependsOn = $DependsOn
       PublicationOrder = 0
-      Description = $UniqueModules | Where-Object { $_.Name -eq $Name } | Select-Object -First 1 -ExpandProperty "Description"
+      Description = $UniquePackages | Where-Object { $_.Name -eq $Name } | Select-Object -First 1 -ExpandProperty "Description"
     }
   }
 

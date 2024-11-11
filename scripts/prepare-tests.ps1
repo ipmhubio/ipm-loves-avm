@@ -50,6 +50,7 @@ While($IPMHubConfigurationFilesQueue.Count -gt 0)
   {
     # Find the nested package within the root folder
     $NestedPackageName = ($NestedPackage.name -split "/") | Select-Object -Last 1
+    $NestedPackageStrategy = $NestedPackage.strategy ?? "Single"
     $NestedPackageRootPath = Join-Path $TestRootPath -ChildPath $NestedPackageName
     If (-not (Test-Path -Path $NestedPackageRootPath))
     {
@@ -61,6 +62,13 @@ While($IPMHubConfigurationFilesQueue.Count -gt 0)
     {
       $Source = Join-Path $NestedPackageRootPath -ChildPath $Version
       $Destination = Join-Path -Path $PackagePackagesFolder -ChildPath $NestedPackageName
+
+      # If strategy is 'multiple', we include the versionnumber of the nested package.
+      If ($NestedPackageStrategy -eq "Multiple")
+      {
+        $Destination = Join-Path -Path $Destination -ChildPath $Version
+      }
+
       "Copying version '{0}' of nested package '{1}' to '{2}'..." -f $Version, $NestedPackageName, $Destination | Write-Verbose
       New-Item -Path $Destination -ItemType "Directory" -Force | Out-Null
       Copy-Item -Path ("{0}\*" -f $Source) -Destination $Destination -Recurse -Force | Out-Null

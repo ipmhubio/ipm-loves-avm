@@ -10,6 +10,7 @@ Param(
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-to-ipm-module.psm1") -Force
 
 # 01. Get information from the build folder.
+"Retrieving AVM build/publish set..." | Write-Host
 $AvmBuildPublishSet = Get-AvmBuildPublishSet -AvmPackageBuildRoot $AvmPackageBuildRoot
 "Found {0} unique packages within the build folder, with a total of {1} versions." -f $AvmBuildPublishSet.UniquePackages.Count, $AvmBuildPublishSet.Packages.Count | Write-Host
 
