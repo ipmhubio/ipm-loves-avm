@@ -871,16 +871,16 @@ Function Copy-AvmModuleForBuild
         }
 
         $ModuleTypes = @("res", "ptn", "utl")
-        $RefVersionAddition = "" 
+        $RefVersionAddition = ""
 
         ForEach($RefVersion in $Ref.Versions)
         {
-          # If multiple versions for the same referenced module are targeted, we can assume IPM will use the multiple strategy.
+          # If multiple versions for the same referenced module are targeted, we can assume IPM will use the multiple download strategy.
           if ($Ref.Versions.Count -gt 1)
           {
             $RefVersionAddition = "/{0}" -f $RefVersion
           }
-          
+
           ForEach($ModuleType in ($ModuleTypes))
           {
             $Find = [RegEx]::Escape(("``br/public:avm/{0}/{1}:{2}`` | Remote Reference |" -f $ModuleType, $Ref.Name, $RefVersion))
@@ -928,15 +928,15 @@ Function Copy-AvmModuleForBuild
     $Packages = $AvmModule.ReferencedModules | ForEach-Object {
       If ($_.Versions.Count -gt 1)
       {
-        @{
+        [Ordered] @{
           name = "{0}/{1}" -f $IpmHubOrganizationName, $_.IpmHubName
-          strategy = "Multiple"
+          downloadStrategy = "Multiple"
           versions = $_.Versions
         }
       } `
       Else
       {
-        @{
+        [Ordered] @{
           name = "{0}/{1}" -f $IpmHubOrganizationName, $_.IpmHubName
           version = $_.Versions | Select-Object -First 1
         }
@@ -1172,7 +1172,7 @@ Function Get-AvmBuildPublishSet
             Name = $Package.name -replace "avm-bicep\/", ""
             Version = $Version
           }
-        }        
+        }
       }
     }
 
