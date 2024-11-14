@@ -50,6 +50,10 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
   Try
   {
     & ipm publish -p "avm-bicep/$($Package.Name)" -v "$($Package.Version)" -f "$($Package.Path)" --with-custom-authorization
+    If ($LASTEXITCODE -lt 0)
+    {
+      Throw ("Publication failed with exit code {0}" -f $LASTEXITCODE)
+    }
   }
   Catch
   {

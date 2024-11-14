@@ -125,6 +125,7 @@ jobs:
         IPM_CLIENT_SCOPES: ${{ secrets.IPM_CLIENT_SCOPES }}
 
     - name: Update the publish state
+      if: env.TOTAL_PACKAGES_FAILED == '0' && env.TOTAL_PACKAGEVERSIONS_FAILED == '0'
       run: |
         Write-Host "Updating the last publish state..."
         Import-Module ./src/scripts/avm-to-ipm-module.psm1

@@ -1152,7 +1152,7 @@ Function Get-AvmBuildPublishSet
   "Found {0} packages within the build folder." -f $PackagesWithinBuildFolder.Count | Write-Verbose
 
   $BuildResults = Get-Content -Path (Join-Path -Path $AvmPackageBuildRoot -ChildPath "results.json") -Encoding "UTF8" | ConvertFrom-Json -Depth 100
-  $UniquePackages = $BuildResults.Modules | ForEach-Object { [PsCustomObject] @{ Name = $_.IpmHubName; Description = $_.Description }}
+  $UniquePackages = [Array] ($BuildResults.Modules | ForEach-Object { [PsCustomObject] @{ Name = $_.IpmHubName; Description = $_.Description }}) ?? @()
 
   # 02. Traverse the build folder to look for packages to publish
   $ToPublish = Get-ChildItem -Path $AvmPackageBuildRoot -Recurse -Depth 1 | Where-Object { $_.Name -match "\d+\.\d+\.\d+" } | ForEach-Object {
