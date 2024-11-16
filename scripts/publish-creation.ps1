@@ -36,6 +36,7 @@ Else
 # 03. Use IPM to publish new versions.
 "Publishing new versions..." | Write-Host
 $FailedPublications = @()
+$TotalPackageVersionsPublished = 0
 ForEach($Package in $AvmBuildPublishSet.Packages)
 {
   $PackageHubInfo = $Res | Where-Object { $_.packageName -eq $Package.FullName } | Select-Object -First 1
@@ -53,6 +54,10 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
     If ($LASTEXITCODE -lt 0)
     {
       Throw ("Publication failed with exit code {0}" -f $LASTEXITCODE)
+    } `
+    Else
+    {
+      $TotalPackageVersionsPublished += 1
     }
   }
   Catch
@@ -65,7 +70,6 @@ ForEach($Package in $AvmBuildPublishSet.Packages)
 # 04. Save information about the total number of created packages and total number of uploaded packages.
 If ($env:GITHUB_ENV)
 {
-  $TotalPackageVersionsPublished = $AvmBuildPublishSet.Packages.Count
   $DataToExport = @"
 TOTAL_PACKAGES_CREATED={0}
 TOTAL_PACKAGES_ALREADY_EXISTED={1}
