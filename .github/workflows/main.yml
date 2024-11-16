@@ -88,7 +88,7 @@ jobs:
       packagesFailedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGES_FAILED }}
       packagesNewVersionsPublishedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_PUBLISHED }}
       packagesNewVersionsPublishedFailedOutcome: ${{ steps.publish.outputs.TOTAL_PACKAGEVERSIONS_FAILED }}
-      cacheStatus: ${{ steps.clear_cache.outputs.cacheStatus }}
+      cacheStatus: ${{ steps.clear_cache.outputs.CACHE_STATUS }}
     needs: build
     if: ${{ (github.event.inputs.shouldPublish == 'true' || github.event.inputs.shouldPublish == null) && needs.build.outputs.packagesBuildOutcome > 0 && needs.build.outputs.testsOutcome != 'failure' }}
     steps:
@@ -145,11 +145,9 @@ jobs:
       run: |
         response=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.FLASK_APP_URL }})
         if [ "$response" -eq 200 ]; then
-          echo "cacheStatus=Cache cleared" >> $GITHUB_ENV
-          echo "::set-output name=cacheStatus::Cache cleared"
+          echo "CACHE_STATUS=Cache cleared" >> $GITHUB_ENV
         else
-          echo "cacheStatus=Cache clearing failed" >> $GITHUB_ENV
-          echo "::set-output name=cacheStatus::Cache clearing failed"
+          echo "CACHE_STATUS=Cache clearing failed" >> $GITHUB_ENV
         fi
 
   notification:
@@ -188,7 +186,7 @@ jobs:
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
         $CacheStatus = "${{ needs.publish.outputs.cacheStatus }}"
-        $Text = "The last publication of AVM Bicep modules succeeded. A total of {0} packages were created, {1} already existed and {2} new versions uploaded.`nCache status: {4}`nCheck the GIT workflow run here: {3}" -f "${{ needs.publish.outputs.packagesCreatedOutcome }}", "${{ needs.publish.outputs.packagesExistedOutcome }}", "${{ needs.publish.outputs.packagesNewVersionsPublishedOutcome }}", $GitHubRunUri, $CacheStatus
+        $Text = "The last publication of AVM Bicep modules succeeded. A total of {0} packages were created, {1} already existed and {2} new versions uploaded.`nCache status: {3}`nCheck the GIT workflow run here: {4}" -f "${{ needs.publish.outputs.packagesCreatedOutcome }}", "${{ needs.publish.outputs.packagesExistedOutcome }}", "${{ needs.publish.outputs.packagesNewVersionsPublishedOutcome }}", $CacheStatus, $GitHubRunUri
         Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP publication succeeded." -Text $Text -MessageType "Success"
       shell: pwsh
       env:
