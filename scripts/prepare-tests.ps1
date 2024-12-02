@@ -50,7 +50,7 @@ While($IPMHubConfigurationFilesQueue.Count -gt 0)
   {
     # Find the nested package within the root folder
     $NestedPackageName = ($NestedPackage.name -split "/") | Select-Object -Last 1
-    $NestedPackageStrategy = $NestedPackage.strategy ?? "Single"
+    $NestedPackageStrategy = $NestedPackage.downloadStrategy ?? "Single"
     $NestedPackageRootPath = Join-Path $TestRootPath -ChildPath $NestedPackageName
     If (-not (Test-Path -Path $NestedPackageRootPath))
     {
