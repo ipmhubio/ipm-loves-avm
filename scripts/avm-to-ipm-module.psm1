@@ -873,10 +873,12 @@ Function Copy-AvmModuleForBuild
         $ModuleTypes = @("res", "ptn", "utl")
         $RefVersionAddition = ""
 
+        # We should check if there are multiple versions mentioned for this module. We can assume IPM will use the multiple download strategy then.
+        $MultipleVersionsAvailable = ([Array] ($AvmModule.ReferencedModules | Where-Object { $_.IpmHubName -eq $RefIpmHubName } | Select-Object -ExpandProperty "Versions") ?? @()).Count -gt 1
         ForEach($RefVersion in $Ref.Versions)
         {
           # If multiple versions for the same referenced module are targeted, we can assume IPM will use the multiple download strategy.
-          if ($Ref.Versions.Count -gt 1)
+          if ($MultipleVersionsAvailable)
           {
             $RefVersionAddition = "/{0}" -f $RefVersion
           }
