@@ -89,6 +89,10 @@
     {
       "search": "workspace",
       "replacement": "avd-workspace"
+    },
+    {
+      "search": "cache/redis-enterprise",
+      "replacement": "redis-enterprise"
     }
   ]
 }
