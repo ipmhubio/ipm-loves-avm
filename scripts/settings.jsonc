@@ -77,7 +77,7 @@
     {
       "search": "app-insights-linked-storage-account",
       "replacement": "insights-collection-endpoint"
-    },    
+    },
     {
       "search": "web-firewall-waf",
       "replacement": "web-waf"
@@ -91,8 +91,12 @@
       "replacement": "avd-workspace"
     },
     {
-      "search": "cache/redis-enterprise",
-      "replacement": "redis-enterprise"
+      "search": "redis-enterprise-and-managed-redis-preview",
+      "replacement": "cache-redis-enterprise"
+    },
+    {
+      "search": "redis-enterprise-and-managed-redis",
+      "replacement": "cache-redis-enterprise"
     }
   ]
 }
