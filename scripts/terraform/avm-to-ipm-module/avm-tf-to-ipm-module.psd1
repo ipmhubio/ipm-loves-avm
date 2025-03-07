@@ -12,7 +12,7 @@
   RootModule           = 'avm-tf-to-ipm-module.psm1'
 
   # Version number of this module.
-  ModuleVersion        = '0.2.0'
+  ModuleVersion        = '0.3.0'
 
   # Supported PSEditions
   CompatiblePSEditions = @("Desktop", "Core")
@@ -30,7 +30,7 @@
   Copyright            = '(c) 2025 IPMHUB. All rights reserved.'
 
   # Description of the functionality provided by this module
-  Description          = 'This module is used to convert Azure Virtual Machine Terraform modules to IPM modules.'
+  Description          = 'This module is used to convert Azure Virtual Machine Terraform modules to IPM modules with Azure Storage state management.'
 
   # Minimum version of the Windows PowerShell engine required by this module
   PowerShellVersion    = '7.0'
@@ -51,7 +51,12 @@
   # ProcessorArchitecture = ''
 
   # Modules that must be imported into the global environment prior to importing this module
-  RequiredModules      = @()
+  RequiredModules      = @(
+    @{
+      ModuleName = 'Az.Storage'
+      ModuleVersion = '5.0.0'
+    }
+  )
 
   # Assemblies that must be loaded prior to importing this module
   # RequiredAssemblies = @()
@@ -68,7 +73,19 @@
   # NestedModules = @()
 
   # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-  FunctionsToExport    = @("*")
+  FunctionsToExport    = @(
+    'Initialize-AzureStorageTable',
+    'Update-PackageVersionState',
+    'Get-PackageVersionState',
+    'Get-NewReleases',
+    'Get-AvmTerraformModule',
+    'Invoke-AvmRelease',
+    'Update-ModuleDocumentation',
+    'Test-TerraformModule',
+    'Send-TeamsNotification',
+    'Publish-ToIpm',
+    'Write-Log'
+  )
 
   # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
   CmdletsToExport      = @()
@@ -94,7 +111,7 @@
       PSData = @{
 
           # Tags applied to this module. These help with module discovery in online galleries.
-          Tags       = @("IPMHUB", "Restore", "tests")
+          Tags       = @("IPMHUB", "AVM", "Terraform", "Azure")
 
           # A URL to the license for this module.
           LicenseUri = 'https://www.IPMHUB.io/'
