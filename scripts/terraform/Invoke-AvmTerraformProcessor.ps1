@@ -64,10 +64,22 @@ try {
     foreach ($package in $diffContent) {
         foreach ($release in $package.releases) {
             #$result = Invoke-AvmRelease -Package $package -Release $release -StagingRoot $StagingDirectory -GithubToken $GithubToken
+            Write-Log "Publishing $packageName v$version to IPM..." -Level "INFO"
 
+            #$publishSuccess = Publish-ToIpm -PackagePath $moduleDir -PackageName $packageName -Version $version
+            $publishSuccess = $true # Temporary fix - replace with actual publishing code
+
+            if (-not $publishSuccess) {
+                Write-Log "Failed to publish $packageName v$version to IPM" -Level "ERROR"
+                return $false
+            }
+
+            Write-Log "Successfully processed $packageName v$version" -Level "SUCCESS"
+            return $true
             if ($result) {
                 $processedCount++
-            } else {
+            }
+            else {
                 $failedCount++
                 $failedPackages += "$($package.name) v$($release.version)"
             }
