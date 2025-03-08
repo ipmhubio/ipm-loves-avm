@@ -40,6 +40,9 @@ param (
     [string]$TableName = "AvmPackageVersions",
 
     [Parameter(Mandatory = $false)]
+    [string]$TableNameReleaseNotes = "AvmPackageReleaseNotes",
+
+    [Parameter(Mandatory = $false)]
     [string]$StagingDirectory = "staging",
 
     [Parameter(Mandatory = $false)]
@@ -77,6 +80,12 @@ try
         -TableName $TableName `
         -UseAzurite $UseAzurite
 
+    $releaseNotesTable = Initialize-AzureStorageTable `
+        -StorageAccountName $StorageAccountName `
+        -StorageAccountKey $StorageAccountKey `
+        -TableName $TableNameReleaseNotes `
+        -UseAzurite $UseAzurite
+
     # Initialize environment
     Initialize-Environment -StagingDirectory $StagingDirectory
 
@@ -87,9 +96,10 @@ try
     }
 
     # Search for AVM repos
-    $searchUrl = "https://api.github.com/search/repositories?q=org:azure+terraform-azurerm-avm-res-+in:name&per_page=100"
+    $searchUrl = "https://api.github.com/search/repositories?q=org:azure+terraform-azurerm-avm-res-storage+in:name&per_page=100"
     Write-Log "Searching for AVM repositories..." -Level "INFO"
     $repos = Invoke-RestMethod -Uri $searchUrl -Headers $headers -Method Get
+    Write-Information $repos
     $repoItems = $repos.items
 
     foreach ($repo in $repoItems)
@@ -100,9 +110,14 @@ try
         # Get releases for this repository
         $releasesUrl = "https://api.github.com/repos/Azure/$repoName/releases"
         $releases = Invoke-RestMethod -Uri $releasesUrl -Headers $headers -Method Get
+        $releases = $releases | Sort-Object -Property created_at
+
+
 
         foreach ($release in $releases)
         {
+            Write-Log "Processing Package: $repoName Version: $($release.tag_name)" -Level "INFO"
+            Write-log "Total releases: $($releases.Count)" -Level "DEBUG"
             $version = if ($release.tag_name.StartsWith('v'))
             {
                 $release.tag_name.Substring(1)
@@ -116,7 +131,7 @@ try
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
             $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version
 
-            if ($existingState)
+            if ($existingState -eq "Published")
             {
                 write-log "Found existing state for $repoName version $version : $existingState.Status" -Level "DEBUG"
                 Write-Log ("Found existing state for {0} version {1}: {2}" -f $repoName, $version, $existingState.Status) -Level "DEBUG"
@@ -124,7 +139,7 @@ try
                 {
                     Write-Log "Package $repoName version $version is already published successfully. Skipping." -Level "INFO"
                     # Return result hashtable with Done = true for published packages
-                    break
+                    continue
                 }
                 elseif ($existingState.Status -eq "Failed")
                 {
@@ -136,6 +151,15 @@ try
             Write-Log "Processing $repoName version $version..." -Level "INFO"
             # Update state to Processing
             Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Processing"
+
+            # Update release notes before processing
+            write-log "Updating release notes for $repoName version $version" -Level "INFO"
+            Update-ReleaseNotes `
+                -table $releaseNotesTable `
+                -PackageName $repoName `
+                -Version $version `
+                -ReleaseNotes $release.body `
+                -CreatedAt $release.created_at
 
             $result = Invoke-AvmRelease -Package @{
                 name = $repoName

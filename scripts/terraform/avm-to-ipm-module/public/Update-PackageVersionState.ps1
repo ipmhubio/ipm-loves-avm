@@ -25,17 +25,38 @@ function Update-PackageVersionState {
         $rowKey = $Version.Replace(".", "-")  # Ensure valid rowkey format
         Write-Log "Using PartitionKey: '$partitionKey', RowKey: '$rowKey'" -Level "DEBUG"
 
-        # Create a new entity
+        # First try to retrieve the existing entity
+        $retrieveOperation = [Microsoft.Azure.Cosmos.Table.TableOperation]::Retrieve($partitionKey, $rowKey)
+        $existingEntity = $Table.Execute($retrieveOperation).Result
+
+        # Create new entity
         $entity = New-Object -TypeName "Microsoft.Azure.Cosmos.Table.DynamicTableEntity" -ArgumentList $partitionKey, $rowKey
-        $entity.Properties.Add("Status", $Status)
+
+        # Only add properties that have values
+        if ($Status) {
+            $entity.Properties.Add("Status", $Status)
+        }
+
+        # LastUpdated is always set on updates
         $entity.Properties.Add("LastUpdated", [DateTime]::UtcNow)
-        $entity.Properties.Add("ErrorMessage", $ErrorMessage)
 
-        Write-Log "Created entity with Status: '$Status', LastUpdated: '$([DateTime]::UtcNow)', ErrorMessage: '$ErrorMessage'" -Level "DEBUG"
+        if ($PSBoundParameters.ContainsKey('ErrorMessage') -and $null -ne $ErrorMessage) {
+            $entity.Properties.Add("ErrorMessage", $ErrorMessage)
+        }
 
-        # Insert or merge the entity
-        $operation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrMerge($entity)
-        Write-Log "Executing InsertOrMerge operation..." -Level "DEBUG"
+        Write-Log "Created entity with properties: $($entity.Properties | ConvertTo-Json)" -Level "DEBUG"
+
+        # Choose operation based on whether entity exists
+        if ($null -eq $existingEntity) {
+            Write-Log "No existing entity found, using InsertOrMerge" -Level "DEBUG"
+            $operation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrMerge($entity)
+        } else {
+            Write-Log "Existing entity found, using Merge with ETag" -Level "DEBUG"
+            $entity.ETag = $existingEntity.ETag
+            $operation = [Microsoft.Azure.Cosmos.Table.TableOperation]::Merge($entity)
+        }
+
+        Write-Log "Executing operation..." -Level "DEBUG"
 
         $result = $Table.Execute($operation)
         Write-Log "Operation completed with status code: $($result.HttpStatusCode)" -Level "DEBUG"
@@ -77,36 +98,20 @@ function Get-PackageVersionState {
     Write-Log "Starting Get-PackageVersionState for package '$PackageName' version '$Version'" -Level "INFO"
     Write-Log "Using table: $($Table.Name) in storage account: $($Table.ServiceClient.Credentials.AccountName)" -Level "DEBUG"
 
-    # Convert version dots to hyphens for RowKey
     $rowKey = $Version.Replace(".", "-")
-
-    # Create filter
     $filter = "(PartitionKey eq '$PackageName') and (RowKey eq '$rowKey')"
     Write-Log "Executing query with filter: $filter" -Level "DEBUG"
 
-    # Execute query
     $query = [Microsoft.Azure.Cosmos.Table.TableQuery]::new()
     $query.FilterString = $filter
     $results = $Table.ExecuteQuery($query)
     Write-Log "Query returned $($results.Count) results" -Level "INFO"
 
     if ($results.Count -gt 0) {
-        $result = @{
-            Success = $true
-            Done = $false
-            Message = ""
-            Status = $results[0].Status
-            LastUpdated = $results[0].LastUpdated
-            ErrorMessage = $results[0].ErrorMessage
-        }
-
-        if ($result.Status -eq "Published") {
-            $result.Done = $true
-        }
-
-        Write-Log "Found entry - Package: $PackageName, Version: $rowKey, Status: $($result.Status)" -Level "DEBUG"
-        return $result
+        $status = $results[0].Properties["Status"].StringValue
+        Write-Log "Found entry - Package: $PackageName, Version: $rowKey, Status: $status" -Level "DEBUG"
+        return $status
     }
 
-    return $null
+    return $false
 }

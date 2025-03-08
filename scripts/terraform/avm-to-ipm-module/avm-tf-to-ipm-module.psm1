@@ -40,3 +40,29 @@ ForEach ($Folder in @('Private', 'Public')) {
   }
 }
 
+# Load all public functions
+$publicFuncFolder = Join-Path -Path $PSScriptRoot -ChildPath 'Public'
+$publicFunctions = Get-ChildItem -Path $publicFuncFolder -Filter '*.ps1'
+foreach ($function in $publicFunctions)
+{
+    . $function.FullName
+}
+
+Export-ModuleMember -Function @(
+    'Get-AvmTerraformModule',
+    'Get-AzureAvmReleases',
+    'Get-NewReleases',
+    'Get-PackageVersionState',
+    'Get-ReleaseArchive',
+    'Initialize-AzureStorageTable',
+    'Initialize-Environment',
+    'Invoke-AvmRelease',
+    'Publish-ToIpm',
+    'Send-TeamsNotification',
+    'Test-TerraformModule',
+    'Update-ModuleDocumentation',
+    'Update-PackageVersionState',
+    'Update-ReleaseNotes',
+    'Write-Log'
+)
+
