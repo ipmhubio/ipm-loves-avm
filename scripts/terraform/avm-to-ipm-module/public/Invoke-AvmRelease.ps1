@@ -142,10 +142,14 @@ function Invoke-AvmRelease
         $testSuccess = Test-TerraformModule -ModulePath $buildForIpmPath
     }
 
-    if (-not $testSuccess)
+    if ($testSuccess -eq $false)
     {
-        $result.Message = "Terraform validation failed for $packageName v$version"
-        Write-Log $result.Message -Level "ERROR"
+        $result = [PSCustomObject]@{
+            Success = $false
+            Message = ""
+        }
+        $result.Message = "Terraform validation failed for $($packageName) v$($version)"
+        Write-Log $result.Message -Level "WARNING"
         return $result
     }
 

@@ -195,7 +195,7 @@ try
             if ($null -ne $existingState)
             {
                 Write-Log ("Found existing state for {0} version {1}: {2}" -f $repoName, $version, $existingState) -Level "DEBUG"
-                if ($existingState -eq "Published")
+                if ($existingState -eq "Published" -or $existingState -eq "Skipped")
                 {
                     Write-Log "Package $repoName version $version is already published successfully. Skipping." -Level "INFO"
                     continue
@@ -240,6 +240,12 @@ try
 
                 Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Published"
                 $processedCount++
+            }
+            elseif ($result.Message -contains "Terraform validation failed for") {
+                Write-Log "Terraform validation failed for $repoName version $version. Marking as Skipped." -Level "ERROR"
+                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Skipped"
+                $failedCount++
+                $failedPackages += "$repoName v$version"
             }
             else
             {
