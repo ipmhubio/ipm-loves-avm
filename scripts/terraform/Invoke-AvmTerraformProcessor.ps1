@@ -99,7 +99,7 @@ try
     }
 
     # Search for AVM repos
-    $searchUrl = "https://api.github.com/search/repositories?q=org:azure+terraform-azurerm-avm-res-storage+in:name&per_page=100"
+    $searchUrl = "https://api.github.com/search/repositories?q=org:azure+terraform-azurerm-avm-res-+in:name&per_page=100"
     $allRepoItems = @()
     $page = 1
 

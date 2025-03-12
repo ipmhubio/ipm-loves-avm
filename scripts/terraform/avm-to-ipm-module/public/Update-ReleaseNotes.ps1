@@ -10,7 +10,7 @@ function Update-ReleaseNotes {
         [Parameter(Mandatory = $true)]
         [string]$Version,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $false)]
         [string]$ReleaseNotes,
 
         [Parameter(Mandatory = $true)]
@@ -19,6 +19,10 @@ function Update-ReleaseNotes {
 
     try {
         Write-Log "Starting Update-ReleaseNotes for package '$PackageName' version '$Version'" -Level "INFO"
+        if ([string]::IsNullOrEmpty($ReleaseNotes)) {
+            Write-Log "Release notes are empty, using default message" -Level "INFO"
+            $ReleaseNotes = "No release notes were published in the GitHub Release for this version."
+        }
 
         $partitionKey = $PackageName
         $rowKey = $Version.Replace(".", "-")
