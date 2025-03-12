@@ -49,6 +49,9 @@ param (
     [string]$IpmClientPath = "ipm",
 
     [Parameter(Mandatory = $false)]
+    [string]$ipmOrganization = "avm-tf",
+
+    [Parameter(Mandatory = $false)]
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
@@ -160,35 +163,34 @@ try
                 -ReleaseNotes $release.body `
                 -CreatedAt $release.created_at
 
+            # Invoke the release process
             $result = Invoke-AvmRelease -Package @{
-                name = $repoName
-                url  = $repo.html_url
+                name            = $repoName
+                url             = $repo.html_url
+                ipmOrganization = $ipmOrganization
             } -Release @{
                 version      = $version
                 published_at = $release.published_at
                 tarball_url  = $release.tarball_url
-            } -StagingRoot $StagingDirectory -GithubToken $GithubToken -table $releaseNotesTable
+            } -StagingRoot $StagingDirectory -GithubToken $GithubToken -table $releaseNotesTable -skipTests $true
 
-            if ($result.Success)
+            Write-Log "Result InVoke-AvmRelease: $($result | ConvertTo-Json -Depth 3)" -Level "DEBUG"
+
+            if ($result.Success -eq $true)
             {
+                write-log "Successfully processed $repoName version $version" -Level "INFO"
+
                 Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Published"
                 $processedCount++
             }
             else
             {
+                Write-Log "Failed to process $repoName version $version : $($result.Message)" -Level "ERROR"
                 Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $result.Message
                 $failedCount++
                 $failedPackages += "$repoName v$version"
             }
 
-            if ($result.Done)
-            {
-                Write-Log "Package $repoName version $version is marked as done. Moving to next version." -Level "INFO"
-                continue
-            }
-
-            # Add a small delay to avoid rate limiting
-            Start-Sleep -Milliseconds 500
         }
     }
 
@@ -208,7 +210,10 @@ try
             }
         }
 
-        Send-TeamsNotification -Message $reportMessage -Color $(if ($failedCount -gt 0) { "FF0000" } else { "00FF00" })
+        if (-not [string]::IsNullOrWhiteSpace($reportMessage) -and -not [string]::IsNullOrWhiteSpace($TeamsWebhookUrl))
+        {
+            Send-TeamsNotification -Message $reportMessage -Color $(if ($failedCount -gt 0) { "FF0000" } else { "00FF00" })
+        }
     }
 
     # Log final status
@@ -223,7 +228,14 @@ try
 }
 catch
 {
-    Write-Log "Critical error in main execution: $_" -Level "ERROR"
-    Send-TeamsNotification -Message "Critical error in AVM package processing: $_" -Title "AVM Processing Error" -Color "FF0000"
+    Write-Log "Critical error in main execution:" -Level "ERROR"
+    Write-Log "Error Message: $($_.Exception.Message)" -Level "ERROR"
+    Write-Log "Error Details: $($_)" -Level "ERROR"
+    Write-Log "Stack Trace: $($_.ScriptStackTrace)" -Level "ERROR"
+
+    if (-not [string]::IsNullOrWhiteSpace($TeamsWebhookUrl) -and -not [string]::IsNullOrWhiteSpace($_.Exception.Message))
+    {
+        Send-TeamsNotification -Message "Critical error in AVM package processing:`n$($_.Exception.Message)" -Title "AVM Processing Error" -Color "FF0000"
+    }
     exit 1
 }

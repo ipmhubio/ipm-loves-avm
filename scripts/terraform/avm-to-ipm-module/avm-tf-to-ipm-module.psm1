@@ -8,7 +8,8 @@ Param(
   [Bool] $VerboseLogging = $False
 )
 
-If ($VerboseLogging) {
+If ($VerboseLogging)
+{
   $VerbosePreference = "Continue"
 }
 
@@ -21,19 +22,24 @@ Write-Verbose $PSScriptRoot
 Write-Verbose 'Import PowerShell subscripts'
 
 # Dot source the files.
-ForEach ($Folder in @('Private', 'Public')) {
+ForEach ($Folder in @('Private', 'Public'))
+{
   $Root = Join-Path -Path $PSScriptRoot -ChildPath $Folder
 
-  If (Test-Path -Path $Root -PathType "Container") {
+  If (Test-Path -Path $Root -PathType "Container")
+  {
     Write-Verbose "Processing '$($Folder)' Folder..."
 
     $Files = Get-ChildItem -Path $Root -Filter "*.ps1" -Recurse | Where-Object { $_.name -notlike '*.Tests.ps1' }
-    ForEach ($File in $Files) {
-      Try {
+    ForEach ($File in $Files)
+    {
+      Try
+      {
         Write-Verbose "Importing '$($File.FullName)'"
         . $File.FullName
       }
-      Catch {
+      Catch
+      {
         Write-Error "Failed to import '$($File.FullName)'"
       }
     }
@@ -45,24 +51,28 @@ $publicFuncFolder = Join-Path -Path $PSScriptRoot -ChildPath 'Public'
 $publicFunctions = Get-ChildItem -Path $publicFuncFolder -Filter '*.ps1'
 foreach ($function in $publicFunctions)
 {
-    . $function.FullName
+  . $function.FullName
 }
 
 Export-ModuleMember -Function @(
-    'Get-AvmTerraformModule',
-    'Get-AzureAvmReleases',
-    'Get-NewReleases',
-    'Get-PackageVersionState',
-    'Get-ReleaseArchive',
-    'Initialize-AzureStorageTable',
-    'Initialize-Environment',
-    'Invoke-AvmRelease',
-    'Publish-ToIpm',
-    'Send-TeamsNotification',
-    'Test-TerraformModule',
-    'Update-ModuleDocumentation',
-    'Update-PackageVersionState',
-    'Update-ReleaseNotes',
-    'Write-Log'
+  'Convert-PackageName',
+  'Get-AvmTerraformModule',
+  'Get-AzureAvmReleases',
+  'Get-NewReleases',
+  'Get-PackageVersionState',
+  'Get-ReleaseArchive',
+  'Initialize-AzureStorageTable',
+  'Initialize-Environment',
+  'Invoke-AvmRelease',
+  'Publish-ToIpm',
+  'Send-TeamsNotification',
+  'Test-TerraformModule',
+  'Update-ModuleDocumentation',
+  'Update-PackageVersionState',
+  'Update-ReleaseNotes',
+  'Update-TelemetryDefault',
+  'Update-TelemetryDefaultInMarkdown',
+  'Write-Log'
+
 )
 

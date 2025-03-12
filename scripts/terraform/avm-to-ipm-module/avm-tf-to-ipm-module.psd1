@@ -53,7 +53,7 @@
   # Modules that must be imported into the global environment prior to importing this module
   RequiredModules      = @(
     @{
-      ModuleName = 'Az.Storage'
+      ModuleName    = 'Az.Storage'
       ModuleVersion = '5.0.0'
     }
   )
@@ -109,27 +109,27 @@
   # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
   PrivateData          = @{
 
-      PSData = @{
+    PSData = @{
 
-          # Tags applied to this module. These help with module discovery in online galleries.
-          Tags       = @("IPMHUB", "AVM", "Terraform", "Azure")
+      # Tags applied to this module. These help with module discovery in online galleries.
+      Tags       = @("IPMHUB", "AVM", "Terraform", "Azure")
 
-          # A URL to the license for this module.
-          LicenseUri = 'https://www.IPMHUB.io/'
+      # A URL to the license for this module.
+      LicenseUri = 'https://www.IPMHUB.io/'
 
-          # A URL to the main website for this project.
-          ProjectUri = 'https://www.IPMHUB.io/'
+      # A URL to the main website for this project.
+      ProjectUri = 'https://www.IPMHUB.io/'
 
-          # A URL to an icon representing this module.
-          #IconUri = 'https://www.IPMHUB.io/icon.png'
+      # A URL to an icon representing this module.
+      #IconUri = 'https://www.IPMHUB.io/icon.png'
 
-          # ReleaseNotes of this module
-          # ReleaseNotes = ''
+      # ReleaseNotes of this module
+      # ReleaseNotes = ''
 
-          # Prerelease string of this module
-          Prerelease = ''
+      # Prerelease string of this module
+      Prerelease = ''
 
-      } # End of PSData hashtable
+    } # End of PSData hashtable
 
   } # End of PrivateData hashtable
 

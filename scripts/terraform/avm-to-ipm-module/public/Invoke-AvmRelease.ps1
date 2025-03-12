@@ -60,10 +60,12 @@ function Invoke-AvmRelease
         [string]$GithubToken,
         [switch]$Force = $false,
         [switch]$LocalRun = $false,
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table
+        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table,
+        [bool]$skipTests = $false
     )
 
     $packageName = $Package.name
+    $ipmOrganization = $Package.ipmOrganization
     $version = $Release.version
     $tarballUrl = $Release.tarball_url
 
@@ -101,9 +103,44 @@ function Invoke-AvmRelease
         # Continue processing despite documentation issues
     }
 
+    #Change telemetry settings
+    Write-Log "Updating telemetry settings for $packageName v$version..." -Level "INFO"
+
+    @(
+        @{
+            Action         = { Update-TelemetryDefault -Path $buildForIpmPath }
+            SuccessMessage = "Successfully updated telemetry settings"
+            WarningMessage = "Failed to update telemetry settings"
+        },
+        @{
+            Action            = { Update-TelemetryDefaultInMarkdown -Path $buildForIpmPath }
+            SuccessMessage    = "Successfully updated telemetry documentation"
+            WarningMessage    = "Failed to update telemetry documentation"
+            DependsOnPrevious = $true
+        }
+    ) | ForEach-Object {
+        $result = $true
+        if (-not $_.DependsOnPrevious -or $result)
+        {
+            $result = & $_.Action
+            $message = if ($result) { $_.SuccessMessage } else { $_.WarningMessage }
+            Write-Log "$message for $packageName v$version" -Level $(if ($result) { "INFO" } else { "WARNING" })
+        }
+        $result
+    }
+
+
     # Test Terraform module
-    Write-Log "Testing $packageName v$version with Terraform..." -Level "INFO"
-    $testSuccess = Test-TerraformModule -ModulePath $buildForIpmPath
+    if ($skipTests)
+    {
+        Write-Log "Skipping Terraform validation for $packageName v$version" -Level "INFO"
+        $testSuccess = $true
+    }
+    else
+    {
+        Write-Log "Testing $packageName v$version with Terraform..." -Level "INFO"
+        $testSuccess = Test-TerraformModule -ModulePath $buildForIpmPath
+    }
 
     if (-not $testSuccess)
     {
@@ -119,18 +156,26 @@ function Invoke-AvmRelease
     $publishResult = Publish-ToIpm `
         -PackagePath $buildForIpmPath `
         -PackageName $packageName `
+        -ipmOrganization $ipmOrganization `
         -Version $version `
         -LocalRun $isLocalRun
+    Write-Log "!Publish result: $($publishResult | ConvertTo-Json -Depth 10)" -Level "INFO"
 
-    if (-not $publishResult)
+    if ($publishResult.Success -eq $false)
     {
+        $result.Success = $false
         $result.Message = "Failed to publish $packageName v$version"
         Write-Log $result.Message -Level "ERROR"
         return $result
     }
+    Write-Log "Done processing $packageName v$version" -Level "INFO"
 
+    # Set success message before returning
+    $result = [PSCustomObject]@{
+        Success = $true
+        Message = ""
+    }
     $result.Success = $true
-    $result.Done = $true
     $result.Message = "Successfully processed $packageName v$version"
     Write-Log $result.Message -Level "SUCCESS"
     return $result

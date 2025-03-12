@@ -1,7 +1,7 @@
 {
   "debug.internalConsoleOptions": "neverOpen",
   "files.associations": {
-    "*.yml": "YAML",
+    "*.yml": "yaml",
     "*.yaml": "YAML"
   },
   "powershell.scriptAnalysis.settingsPath": "ScriptAnalyzerSettings.psd1",

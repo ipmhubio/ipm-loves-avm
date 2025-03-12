@@ -9,26 +9,32 @@ def count_releases(json_file):
         print(f"Error loading JSON file: {e}")
         return
 
-    packages_with_releases = []
-    total_releases = 0
+    PREFIX = "terraform-azurerm-avm-res-"
+    long_names = []
 
     for package in data:
         name = package["name"]
-        release_count = package.get("release_count", 0)
+        # Only trim if the name starts with the prefix
+        trimmed_name = name[len(PREFIX):] if name.startswith(PREFIX) else name
 
-        if release_count > 0:
-            packages_with_releases.append({"name": name, "release_count": release_count})
-            total_releases += release_count
+        # Check if trimmed name is longer than 36 characters
+        if len(trimmed_name) > 30:
+            long_names.append({
+                "original": name,
+                "trimmed": trimmed_name,
+                "length": len(trimmed_name)
+            })
+    # Sort by length (longest first)
+    long_names = sorted(long_names, key=lambda x: x["length"], reverse=True)
 
-    # Sort by release count (highest first)
-    packages_with_releases = sorted(packages_with_releases, key=lambda x: x["release_count"], reverse=True)
+    print(f"\nPackages with names longer than 30 characters (after trimming '{PREFIX}'):")
+    print("-" * 80)
 
-    print(f"Total packages with releases: {len(packages_with_releases)}")
-    print(f"Total releases across all packages: {total_releases}")
-    print("\nPackage release counts (sorted by most releases):")
-
-    for package in packages_with_releases:
-        print(f"{package['name']}: {package['release_count']} releases")
+    for package in long_names:
+        print(f"Original: {package['original']}")
+        print(f"Trimmed:  {package['trimmed']}")
+        print(f"Length:   {package['length']} characters")
+        print("-" * 80)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

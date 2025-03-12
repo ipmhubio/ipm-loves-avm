@@ -36,6 +36,11 @@ function Test-TerraformModule
 
         #remove the .terraform directory
         Remove-Item -Path ".terraform" -Recurse -Force
+        #remove all log files (*logs)
+        Remove-Item -Path "*.log" -Force
+        #remove all .terraform.lock.hcl files
+        Remove-Item -Path ".terraform.lock.hcl" -Force
+
 
         # fmt returns 0 if no changes were made, 1 if changes were made, and 2+ if there was an error
         if ($fmtProcess.ExitCode -gt 1)
