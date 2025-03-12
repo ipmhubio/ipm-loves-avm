@@ -64,38 +64,68 @@ function Get-CombinedReleaseNotes {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$table, # Renamed parameter to be more specific
+        [Microsoft.Azure.Cosmos.Table.CloudTable]$table,
 
         [Parameter(Mandatory = $true)]
-        [string]$PackageName
+        [string]$PackageName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ModulePath,
+
+        [Parameter(Mandatory = $false)]
+        [string]$Version
     )
 
     try {
-        Write-Log "Getting combined release notes for package '$PackageName'" -Level "INFO"
+        Write-Log "Getting combined release notes for package '$PackageName' up to version '$Version'" -Level "INFO"
 
         # Query all versions for this package
         $query = [Microsoft.Azure.Cosmos.Table.TableQuery]::new()
-        # Update query to use simple partition key
         $filter = "PartitionKey eq '$PackageName'"
         $query.FilterString = $filter
 
         $results = $table.ExecuteQuery($query)
+        Write-Log "Found $($results.Count) total versions for package '$PackageName'" -Level "DEBUG"
 
-        # Sort by CreatedAt date
-        $sortedResults = $results | Sort-Object { $_.Properties["CreatedAt"].DateTime }
+        if ($results.Count -eq 0) {
+            Write-Log "No release notes found for package '$PackageName'" -Level "WARNING"
+            # Create minimal release notes file
+            $minimalNotes = "# Release History`n"
+            $releaseNotesPath = Join-Path $ModulePath "RELEASENOTES.md"
+            Set-Content -Path $releaseNotesPath -Value $minimalNotes -Force
+            return $minimalNotes
+        }
 
-        # Combine release notes in chronological order
+        # Filter versions if Version parameter is provided
+        if ($Version) {
+            $targetVersion = [Version]($Version.TrimStart('v'))
+            $results = $results | Where-Object {
+                $currentVersion = [Version]($_.Properties["Version"].StringValue.TrimStart('v'))
+                $currentVersion -le $targetVersion
+            }
+            Write-Log "Filtered to $($results.Count) versions up to $Version" -Level "DEBUG"
+        }
+
+        # Sort by CreatedAt date in reverse order (newest first)
+        $sortedResults = $results | Sort-Object { $_.Properties["CreatedAt"].DateTime } -Descending
+        Write-Log "Sorted results by creation date (newest first)" -Level "DEBUG"
+
+        # Combine release notes with newest first
         $combinedNotes = New-Object System.Text.StringBuilder
 
         [void]$combinedNotes.AppendLine("# Release History")
         [void]$combinedNotes.AppendLine("")
 
         foreach ($result in $sortedResults) {
-            if ($result.Properties["ReleaseNotes"]) {
+            if ($result.Properties.ContainsKey("ReleaseNotes") -and
+                $result.Properties.ContainsKey("Version") -and
+                $result.Properties.ContainsKey("CreatedAt")) {
+
                 $version = $result.Properties["Version"].StringValue
-                $notes = $result.Properties["ReleaseNotes"].StringValue
+                $notes = $result.Properties["ReleaseNotes"].StringValue.Trim()
                 $date = $result.Properties["CreatedAt"].DateTime.ToString("yyyy-MM-dd")
 
+                Write-Log "Processing version $version from $date" -Level "DEBUG"
                 [void]$combinedNotes.AppendLine("## Version $version - $date")
                 [void]$combinedNotes.AppendLine("")
                 [void]$combinedNotes.AppendLine($notes)
@@ -103,10 +133,17 @@ function Get-CombinedReleaseNotes {
             }
         }
 
-        return $combinedNotes.ToString()
+        $releaseNotes = $combinedNotes.ToString()
+
+        # Write to the RELEASENOTES.md file in the module path
+        $releaseNotesPath = Join-Path $ModulePath "RELEASENOTES.md"
+        Set-Content -Path $releaseNotesPath -Value $releaseNotes -Force
+
+        Write-Log "Successfully generated and saved combined release notes to $releaseNotesPath ($($releaseNotes.Length) characters)" -Level "INFO"
+        return $releaseNotes
     }
     catch {
         Write-Log "Failed to get combined release notes: $_" -Level "ERROR"
-        return "Failed to generate release notes."
+        throw
     }
 }

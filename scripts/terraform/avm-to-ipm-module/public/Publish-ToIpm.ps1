@@ -1,4 +1,5 @@
-function Publish-ToIpm {
+function Publish-ToIpm
+{
     param (
         [string]$PackagePath,
         [string]$PackageName,
@@ -6,19 +7,22 @@ function Publish-ToIpm {
         [bool]$LocalRun = $false
     )
 
-    try {
+    try
+    {
         Write-Log "Publishing $PackageName v$Version to IPM..." -Level "INFO"
 
         # Construct the publish command
         $publishCommand = "ipm publish --package $PackageName --version $Version --folder $PackagePath --non-interactive"
 
-        if ($LocalRun) {
+        if ($LocalRun)
+        {
             # When running locally, just output the command
             Write-Log "Local run - Command to execute:" -Level "INFO"
             Write-Log $publishCommand -Level "INFO"
             return $true
         }
-        else {
+        else
+        {
             # This is a placeholder for your actual IPM publish command
             $process = Start-Process -FilePath $IpmClientPath -ArgumentList @(
                 "publish",
@@ -28,7 +32,8 @@ function Publish-ToIpm {
                 "--non-interactive"
             ) -PassThru -Wait
 
-            if ($process.ExitCode -ne 0) {
+            if ($process.ExitCode -ne 0)
+            {
                 Write-Log "Failed to publish $PackageName v$Version to IPM" -Level "ERROR"
                 return $false
             }
@@ -37,7 +42,8 @@ function Publish-ToIpm {
             return $true
         }
     }
-    catch {
+    catch
+    {
         Write-Log "Error publishing to IPM: $_" -Level "ERROR"
         return $false
     }

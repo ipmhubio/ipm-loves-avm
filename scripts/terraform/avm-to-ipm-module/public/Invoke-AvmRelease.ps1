@@ -1,4 +1,5 @@
-function Copy-ExtractedToIpmBuild {
+function Copy-ExtractedToIpmBuild
+{
     param (
         [string]$ExtractedPath,
         [string]$VersionFolderPath
@@ -6,7 +7,8 @@ function Copy-ExtractedToIpmBuild {
 
     # Create build-for-ipm folder at the same level as extracted and release.tar.gz
     $buildForIpmPath = Join-Path (Split-Path $VersionFolderPath -Parent) "build-for-ipm"
-    if (Test-Path $buildForIpmPath) {
+    if (Test-Path $buildForIpmPath)
+    {
         Remove-Item -Path $buildForIpmPath -Recurse -Force
     }
     New-Item -Path $buildForIpmPath -ItemType Directory -Force | Out-Null
@@ -31,11 +33,15 @@ function Copy-ExtractedToIpmBuild {
         $relativePath = $_.FullName.Substring($ExtractedPath.Length + 1)
         $targetPath = Join-Path $buildForIpmPath $relativePath
 
-        if ($_.PSIsContainer) {
+        if ($_.PSIsContainer)
+        {
             New-Item -Path $targetPath -ItemType Directory -Force | Out-Null
-        } else {
+        }
+        else
+        {
             $targetDir = Split-Path $targetPath -Parent
-            if (-not (Test-Path $targetDir)) {
+            if (-not (Test-Path $targetDir))
+            {
                 New-Item -Path $targetDir -ItemType Directory -Force | Out-Null
             }
             Copy-Item -Path $_.FullName -Destination $targetPath -Force
@@ -45,13 +51,16 @@ function Copy-ExtractedToIpmBuild {
     return $buildForIpmPath
 }
 
-function Invoke-AvmRelease {
+function Invoke-AvmRelease
+{
     param (
         [PSCustomObject]$Package,
         [PSCustomObject]$Release,
         [string]$StagingRoot,
         [string]$GithubToken,
-        [switch]$Force = $false
+        [switch]$Force = $false,
+        [switch]$LocalRun = $false,
+        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table
     )
 
     $packageName = $Package.name
@@ -63,7 +72,7 @@ function Invoke-AvmRelease {
     # Initialize result hashtable
     $result = @{
         Success = $false
-        Done = $false
+        Done    = $false
         Message = ""
     }
 
@@ -71,7 +80,8 @@ function Invoke-AvmRelease {
     $moduleResult = Get-AvmTerraformModule -PackageName $packageName -Version $version -TarballUrl $tarballUrl `
         -StagingDirectory $StagingRoot -GithubToken $GithubToken -Force:$Force
 
-    if (-not $moduleResult.Success) {
+    if (-not $moduleResult.Success)
+    {
         $result.Message = "Failed to download or extract $packageName v$version : $($moduleResult.Message)"
         Write-Log $result.Message -Level "ERROR"
         return $result
@@ -83,9 +93,10 @@ function Invoke-AvmRelease {
     # From here on, use $buildForIpmPath instead of $moduleDir for further processing
     # Update documentation
     Write-Log "Updating documentation for $packageName v$version..." -Level "INFO"
-    $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $buildForIpmPath
+    $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $buildForIpmPath -Table $table -PackageName $packageName -Version $version
 
-    if (-not $docUpdateSuccess) {
+    if (-not $docUpdateSuccess)
+    {
         Write-Log "Warning: Documentation update failed for $packageName v$version" -Level "WARNING"
         # Continue processing despite documentation issues
     }
@@ -94,7 +105,8 @@ function Invoke-AvmRelease {
     Write-Log "Testing $packageName v$version with Terraform..." -Level "INFO"
     $testSuccess = Test-TerraformModule -ModulePath $buildForIpmPath
 
-    if (-not $testSuccess) {
+    if (-not $testSuccess)
+    {
         $result.Message = "Terraform validation failed for $packageName v$version"
         Write-Log $result.Message -Level "ERROR"
         return $result
@@ -110,7 +122,8 @@ function Invoke-AvmRelease {
         -Version $version `
         -LocalRun $isLocalRun
 
-    if (-not $publishResult) {
+    if (-not $publishResult)
+    {
         $result.Message = "Failed to publish $packageName v$version"
         Write-Log $result.Message -Level "ERROR"
         return $result

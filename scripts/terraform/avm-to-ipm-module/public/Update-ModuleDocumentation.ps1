@@ -1,32 +1,38 @@
-function Update-ModuleDocumentation {
-  param (
-      [string]$ModulePath
-  )
+function Update-ModuleDocumentation
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$ModulePath,
 
-  # try {
-  #     # Assume the module might have a terraform-docs.yml file that controls doc generation
-  #     # If not, you might need to create one
+        [Parameter(Mandatory = $true)]
+        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table,
 
-  #     # Check if terraform-docs is installed
-  #     $terraformDocsInstalled = $null -ne (Get-Command terraform-docs -ErrorAction SilentlyContinue)
+        [Parameter(Mandatory = $true)]
+        [string]$PackageName,
 
-  #     if (-not $terraformDocsInstalled) {
-  #         Write-Log "terraform-docs tool not found. Documentation won't be updated." -Level "WARNING"
-  #         return $true
-  #     }
+        [Parameter(Mandatory = $false)]
+        [string]$Version
+    )
 
-  #     # Run terraform-docs to update documentation
-  #     $process = Start-Process -FilePath "terraform-docs" -ArgumentList "markdown", "table", "--output-file", "README.md", $ModulePath -NoNewWindow -PassThru -Wait
+    try
+    {
+        Write-Log "Updating module documentation in $ModulePath" -Level "INFO"
 
-  #     if ($process.ExitCode -ne 0) {
-  #         Write-Log "Failed to update documentation for $ModulePath" -Level "WARNING"
-  #         return $false
-  #     }
 
-  #     return $true
-  # }
-  # catch {
-  #     Write-Log "Error updating documentation for $ModulePath : $_" -Level "ERROR"
-  #     return $false
-  # }
+        # Get combined release notes using existing table
+        $releaseNotes = Get-CombinedReleaseNotes -Table $Table -PackageName $packageName -version $Version -modulePath $ModulePath
+
+        # Create or update RELEASENOTES.md
+        $releaseNotesPath = Join-Path $ModulePath "RELEASENOTES.md"
+        Set-Content -Path $releaseNotesPath -Value $releaseNotes -Force
+
+        Write-Log "Successfully updated release notes at $releaseNotesPath" -Level "INFO"
+        return $true
+    }
+    catch
+    {
+        Write-Log "Failed to update module documentation: $packageName" -Level "ERROR"
+        return $false
+    }
 }

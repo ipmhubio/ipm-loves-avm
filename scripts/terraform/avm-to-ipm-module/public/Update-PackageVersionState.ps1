@@ -1,4 +1,5 @@
-function Update-PackageVersionState {
+function Update-PackageVersionState
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -17,7 +18,8 @@ function Update-PackageVersionState {
         [string]$ErrorMessage
     )
 
-    try {
+    try
+    {
         Write-Log "Starting Update-PackageVersionState for package '$PackageName' version '$Version'" -Level "INFO"
         Write-Log "Using table: $($Table.Name) in storage account: $($Table.ServiceClient.Credentials.AccountName)" -Level "DEBUG"
 
@@ -33,24 +35,29 @@ function Update-PackageVersionState {
         $entity = New-Object -TypeName "Microsoft.Azure.Cosmos.Table.DynamicTableEntity" -ArgumentList $partitionKey, $rowKey
 
         # Only add properties that have values
-        if ($Status) {
+        if ($Status)
+        {
             $entity.Properties.Add("Status", $Status)
         }
 
         # LastUpdated is always set on updates
         $entity.Properties.Add("LastUpdated", [DateTime]::UtcNow)
 
-        if ($PSBoundParameters.ContainsKey('ErrorMessage') -and $null -ne $ErrorMessage) {
+        if ($PSBoundParameters.ContainsKey('ErrorMessage') -and $null -ne $ErrorMessage)
+        {
             $entity.Properties.Add("ErrorMessage", $ErrorMessage)
         }
 
         Write-Log "Created entity with properties: $($entity.Properties | ConvertTo-Json)" -Level "DEBUG"
 
         # Choose operation based on whether entity exists
-        if ($null -eq $existingEntity) {
+        if ($null -eq $existingEntity)
+        {
             Write-Log "No existing entity found, using InsertOrMerge" -Level "DEBUG"
             $operation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrMerge($entity)
-        } else {
+        }
+        else
+        {
             Write-Log "Existing entity found, using Merge with ETag" -Level "DEBUG"
             $entity.ETag = $existingEntity.ETag
             $operation = [Microsoft.Azure.Cosmos.Table.TableOperation]::Merge($entity)
@@ -61,19 +68,23 @@ function Update-PackageVersionState {
         $result = $Table.Execute($operation)
         Write-Log "Operation completed with status code: $($result.HttpStatusCode)" -Level "DEBUG"
 
-        if ($result.HttpStatusCode -ge 200 -and $result.HttpStatusCode -lt 300) {
+        if ($result.HttpStatusCode -ge 200 -and $result.HttpStatusCode -lt 300)
+        {
             Write-Log "Successfully updated state for package '$PackageName' version '$Version' with status '$Status'" -Level "INFO"
             Write-Log "ETag: $($result.Etag), Timestamp: $($result.Timestamp)" -Level "DEBUG"
             return $true
-        } else {
+        }
+        else
+        {
             Write-Log "Operation completed but returned unexpected status code: $($result.HttpStatusCode)" -Level "WARN"
             return $false
         }
     }
-    catch {
+    catch
+    {
         $errorDetails = @{
-            Message = $_.Exception.Message
-            Line = $_.InvocationInfo.ScriptLineNumber
+            Message    = $_.Exception.Message
+            Line       = $_.InvocationInfo.ScriptLineNumber
             ScriptName = $_.InvocationInfo.ScriptName
             StackTrace = $_.Exception.StackTrace
         } | ConvertTo-Json
@@ -82,7 +93,8 @@ function Update-PackageVersionState {
     }
 }
 
-function Get-PackageVersionState {
+function Get-PackageVersionState
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
@@ -107,7 +119,8 @@ function Get-PackageVersionState {
     $results = $Table.ExecuteQuery($query)
     Write-Log "Query returned $($results.Count) results" -Level "INFO"
 
-    if ($results.Count -gt 0) {
+    if ($results.Count -gt 0)
+    {
         $status = $results[0].Properties["Status"].StringValue
         Write-Log "Found entry - Package: $PackageName, Version: $rowKey, Status: $status" -Level "DEBUG"
         return $status

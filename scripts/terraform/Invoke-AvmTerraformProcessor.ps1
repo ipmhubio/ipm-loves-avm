@@ -130,20 +130,19 @@ try
             # Check if this version is already processed and published successfully
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
             $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version
-
-            if ($existingState -eq "Published")
+            Write-Log "Current state $existingState" -Level "DEBUG"
+            if ($null -ne $existingState)
             {
-                write-log "Found existing state for $repoName version $version : $existingState.Status" -Level "DEBUG"
-                Write-Log ("Found existing state for {0} version {1}: {2}" -f $repoName, $version, $existingState.Status) -Level "DEBUG"
-                if ($existingState.Success)
+                Write-Log ("Found existing state for {0} version {1}: {2}" -f $repoName, $version, $existingState) -Level "DEBUG"
+                if ($existingState -eq "Published")
                 {
                     Write-Log "Package $repoName version $version is already published successfully. Skipping." -Level "INFO"
-                    # Return result hashtable with Done = true for published packages
                     continue
                 }
-                elseif ($existingState.Status -eq "Failed")
+                elseif ($existingState -eq "Failed")
                 {
                     Write-Log "Package $repoName version $version previously failed. Retrying..." -Level "WARNING"
+                    # Continue processing this version
                 }
             }
 
@@ -168,7 +167,7 @@ try
                 version      = $version
                 published_at = $release.published_at
                 tarball_url  = $release.tarball_url
-            } -StagingRoot $StagingDirectory -GithubToken $GithubToken
+            } -StagingRoot $StagingDirectory -GithubToken $GithubToken -table $releaseNotesTable
 
             if ($result.Success)
             {
