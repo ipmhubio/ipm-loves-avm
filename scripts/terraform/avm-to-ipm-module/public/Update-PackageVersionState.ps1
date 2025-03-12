@@ -128,3 +128,45 @@ function Get-PackageVersionState
 
     return $false
 }
+
+function Get-PublishedPackages
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table
+    )
+
+    Write-Log "Starting Get-PublishedPackages" -Level "INFO"
+    Write-Log "Using table: $($Table.Name) in storage account: $($Table.ServiceClient.Credentials.AccountName)" -Level "DEBUG"
+
+    # Query for all entries with Status = 'Published'
+    $filter = "Status eq 'Published'"
+    $query = [Microsoft.Azure.Cosmos.Table.TableQuery]::new()
+    $query.FilterString = $filter
+
+    try
+    {
+        $results = $Table.ExecuteQuery($query)
+        Write-Log "Query returned $($results.Count) published entries" -Level "DEBUG"
+
+        # Extract distinct package names (PartitionKeys)
+        $publishedPackages = $results |
+            Select-Object -ExpandProperty PartitionKey -Unique |
+                Sort-Object
+
+        Write-Log "Found $($publishedPackages.Count) unique packages with published versions" -Level "INFO"
+        return $publishedPackages
+    }
+    catch
+    {
+        $errorDetails = @{
+            Message    = $_.Exception.Message
+            Line       = $_.InvocationInfo.ScriptLineNumber
+            ScriptName = $_.InvocationInfo.ScriptName
+            StackTrace = $_.Exception.StackTrace
+        } | ConvertTo-Json
+        Write-Log "Failed to get published packages. Error details: $errorDetails" -Level "ERROR"
+        return @()
+    }
+}

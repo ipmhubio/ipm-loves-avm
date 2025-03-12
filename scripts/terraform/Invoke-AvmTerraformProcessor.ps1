@@ -100,12 +100,70 @@ try
 
     # Search for AVM repos
     $searchUrl = "https://api.github.com/search/repositories?q=org:azure+terraform-azurerm-avm-res-storage+in:name&per_page=100"
-    Write-Log "Searching for AVM repositories..." -Level "INFO"
-    $repos = Invoke-RestMethod -Uri $searchUrl -Headers $headers -Method Get
-    Write-Information $repos
-    $repoItems = $repos.items
+    $allRepoItems = @()
+    $page = 1
 
-    foreach ($repo in $repoItems)
+    do
+    {
+        $pageUrl = "$searchUrl&page=$page"
+        Write-Log "Searching for AVM repositories (page $page)..." -Level "INFO"
+        $repos = Invoke-RestMethod -Uri $pageUrl -Headers $headers -Method Get
+        $allRepoItems += $repos.items
+
+        # Check if there are more pages
+        $hasMorePages = $repos.items.Count -eq 100
+        $page++
+    } while ($hasMorePages)
+
+    Write-Log "Found total of $($allRepoItems.Count) repositories" -Level "INFO"
+    Write-Information $allRepoItems
+
+    #Check if package is already created in IPMHub.
+    #fist create an array of all distinct pages from the search result
+    $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
+        $repoName = $_
+        $repoName
+    }
+    #list all distinct packages from the storage table and compare with the search result
+    $allTableItems = Get-PublishedPackages -Table $table
+
+    #compare the two arrays
+    # Create array to store new packages
+    $newPackages = @()
+
+    $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
+        $repoName = $_
+        if ($allTableItems -contains $repoName)
+        {
+            Write-Log "Package $repoName already exists in IPMHub" -Level "INFO"
+        }
+        else
+        {
+            Write-Log "Package $repoName does not exist in IPMHub" -Level "INFO"
+            # Add the package to the newPackages array
+            $newPackages += [PSCustomObject]@{
+                Name = $repoName
+                Description = ($allRepoItems | Where-Object { $_.name -eq $repoName }).description
+            }
+        }
+    }
+
+    # If there are new packages, create them in IPMHub
+    if ($newPackages.Count -gt 0) {
+        Write-Log "Creating $($newPackages.Count) new packages in IPMHub" -Level "INFO"
+        # Convert string "1" to boolean using simple comparison
+        $isLocalRun = $env:LOCAL_RUN -eq "1"
+        Write-Log "local run is set to: $($isLocalRun)" -level "DEBUG"
+
+        $result = Invoke-IpmHubPackageEnsurance `
+            -Packages $newPackages `
+            -PackageCreationApi "https://api.ipmhub.io/packages" `
+            -OrganizationName $ipmOrganization `
+            -LocalRun $isLocalRun
+    }
+    # Process each repository
+
+    foreach ($repo in $allRepoItems)
     {
         $repoName = $repo.name
         Write-Log "Processing repository: $repoName" -Level "INFO"

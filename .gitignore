@@ -1,1 +1,2 @@
 scripts/terraform/staging/
+__azurite_db_table__.json
