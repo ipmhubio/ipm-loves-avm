@@ -1,13 +1,21 @@
-function Write-Log
-{
+function Write-Log {
     param (
         [Parameter(Mandatory = $true)]
         [string]$Message,
 
         [Parameter(Mandatory = $false)]
         [ValidateSet("INFO", "WARNING", "ERROR", "SUCCESS", "DEBUG")]
-        [string]$Level = "INFO"
+        [string]$Level = "INFO",
+
+        [Parameter(Mandatory = $false)]
+        [string]$LogPath = "./logs/ipm-process.log"
     )
+
+    # Create logs directory if it doesn't exist
+    $logDirectory = Split-Path -Parent $LogPath
+    if (-not (Test-Path -Path $logDirectory)) {
+        New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
+    }
 
     # Get call stack information
     $callStack = Get-PSCallStack
@@ -24,12 +32,20 @@ function Write-Log
 
     $logMessage = "$timestampCol $levelCol $locationCol $Message"
 
-    switch ($Level)
-    {
+    # Write to console with color
+    switch ($Level) {
         "INFO" { Write-Host $logMessage -ForegroundColor Cyan }
         "WARNING" { Write-Host $logMessage -ForegroundColor Blue }
         "ERROR" { Write-Host $logMessage -ForegroundColor Red }
         "SUCCESS" { Write-Host $logMessage -ForegroundColor Green }
         "DEBUG" { Write-Host $logMessage -ForegroundColor Yellow }
+    }
+
+    # Write to log file
+    try {
+        Add-Content -Path $LogPath -Value $logMessage -ErrorAction Stop
+    }
+    catch {
+        Write-Host "Failed to write to log file: $_" -ForegroundColor Red
     }
 }

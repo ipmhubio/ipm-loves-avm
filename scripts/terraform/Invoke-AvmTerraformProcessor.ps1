@@ -230,7 +230,7 @@ try
                 version      = $version
                 published_at = $release.published_at
                 tarball_url  = $release.tarball_url
-            } -StagingRoot $StagingDirectory -GithubToken $GithubToken -table $releaseNotesTable -skipTests $true
+            } -StagingRoot $StagingDirectory -GithubToken $GithubToken -table $releaseNotesTable -skipTests $false
 
             Write-Log "Result InVoke-AvmRelease: $($result | ConvertTo-Json -Depth 3)" -Level "DEBUG"
 
