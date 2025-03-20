@@ -148,7 +148,8 @@ function Get-PublishedPackages
     try
     {
         $results = $Table.ExecuteQuery($query)
-        Write-Log "Query returned $($results.Count) published entries" -Level "DEBUG"
+        $resultsCount = ($results | Measure-Object).Count
+        Write-Log "Query returned $resultsCount published entries" -Level "DEBUG"
 
         # Extract distinct package names (PartitionKeys)
         $publishedPackages = $results |
