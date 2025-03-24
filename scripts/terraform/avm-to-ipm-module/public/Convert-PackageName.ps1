@@ -33,7 +33,7 @@ function Convert-PackageName {
         return $result
     }
     catch {
-        Write-Warning "Error processing name mapping: $_"
+        Write-log "Error processing name mapping: $_" -level "ERROR"
         return $false
     }
 }

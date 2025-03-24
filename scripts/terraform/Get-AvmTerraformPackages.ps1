@@ -2,11 +2,10 @@ using namespace Microsoft.Azure.Cosmos.Table
 
 <#
 .SYNOPSIS
-    Processes Azure Verified Modules (AVM) Terraform packages and republishes them to IPM.
+    Discovers and downloads Azure Verified Modules (AVM) Terraform packages.
 .DESCRIPTION
-    This script orchestrates the entire workflow for finding, downloading, processing, and publishing
-    AVM Terraform modules to your internal platform. It handles state management between runs and
-    ensures that failed packages are retried in subsequent runs.
+    This script discovers new AVM Terraform modules by querying GitHub and comparing
+    with previously processed versions. New packages are downloaded and prepared for testing.
 .PARAMETER GithubToken
     GitHub Personal Access Token for API access.
 .PARAMETER StorageAccountName
@@ -15,10 +14,12 @@ using namespace Microsoft.Azure.Cosmos.Table
     Azure Storage Account Key for state management.
 .PARAMETER TableName
     Azure Storage Table Name for state management.
+.PARAMETER TableNameReleaseNotes
+    Azure Storage Table Name for release notes.
 .PARAMETER StagingDirectory
     Directory where packages will be downloaded and processed.
-.PARAMETER IpmClientPath
-    Path to the IPM client executable.
+.PARAMETER ipmOrganization
+    IPM organization name.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
 .PARAMETER UseAzurite
@@ -46,16 +47,16 @@ param (
     [string]$StagingDirectory = "staging",
 
     [Parameter(Mandatory = $false)]
-    [string]$IpmClientPath = "ipm",
-
-    [Parameter(Mandatory = $false)]
     [string]$ipmOrganization = "avm-tf",
 
     [Parameter(Mandatory = $false)]
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true
+    [bool]$UseAzurite = $true,
+
+    [Parameter(Mandatory = $false)]
+    [bool]$localrun = $false
 )
 
 # Import required modules and types
@@ -70,7 +71,7 @@ Import-Module AzTable
 
 #region Main Execution
 $ErrorActionPreference = "Stop"
-$processedCount = 0
+$downloadedCount = 0
 $failedCount = 0
 $failedPackages = @()
 
@@ -116,42 +117,51 @@ try
     } while ($hasMorePages)
 
     Write-Log "Found total of $($allRepoItems.Count) repositories" -Level "INFO"
-    Write-Information $allRepoItems
 
-    #Check if package is already created in IPMHub.
-    #fist create an array of all distinct pages from the search result
-    $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
-        $repoName = $_
-        $repoName
-    }
-    #list all distinct packages from the storage table and compare with the search result
-    $allTableItems = Get-PublishedPackages -Table $table
+    # #Check if package is already created in IPMHub.
+    # #fist create an array of all distinct pages from the search result
+    # $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
+    #     $repoName = $_
+    #     $repoName
+    # }
+    # #list all distinct packages from the storage table and compare with the search result
+    # $allTableItems = Get-PublishedPackages -Table $table
 
-    #compare the two arrays
-    # Create array to store new packages
-    $newPackages = @()
+    # #compare the two arrays
+    # # Create array to store new packages
+    # $newPackages = @()
 
-    $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
-        $repoName = $_
-        if ($allTableItems -contains $repoName)
-        {
-            Write-Log "Package $repoName already exists in IPMHub" -Level "INFO"
-        }
-        else
-        {
-            Write-Log "Package $repoName does not exist in IPMHub" -Level "INFO"
-            # Add the package to the newPackages array
-            $newPackages += [PSCustomObject]@{
-                Name = $repoName
-                Description = ($allRepoItems | Where-Object { $_.name -eq $repoName }).description
-            }
-        }
-    }
+    # $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
+    #     $repoName = $_
+    #     if ($allTableItems -contains $repoName)
+    #     {
+    #         Write-Log "Package $repoName already exists in IPMHub" -Level "INFO"
+    #     }
+    #     else
+    #     {
+    #         Write-Log "Package $repoName does not exist in IPMHub" -Level "INFO"
+    #         # Add the package to the newPackages array
+    #         $newPackages += [PSCustomObject]@{
+    #             Name = $repoName
+    #             Description = ($allRepoItems | Where-Object { $_.name -eq $repoName }).description
+    #         }
+    #     }
+    # }
 
-    # If there are new packages, create them in IPMHub
+    # # If there are new packages, create them in IPMHub
+    # if ($newPackages.Count -gt 0) {
+    #     Write-Log "Creating $($newPackages.Count) new packages in IPMHub" -Level "INFO"
+    #     $isLocalRun = $localrun
+    #     Write-Log "local run is set to: $($isLocalRun)" -level "DEBUG"
 
-    # Process each repository
+    #     Invoke-IpmHubPackageEnsurance `
+    #         -Packages $newPackages `
+    #         -PackageCreationApi "https://api.ipmhub.io/packages" `
+    #         -OrganizationName $ipmOrganization `
+    #         -LocalRun $localrun
+    # }
 
+    # Process each repository to download new packages
     foreach ($repo in $allRepoItems)
     {
         $repoName = $repo.name
@@ -162,12 +172,9 @@ try
         $releases = Invoke-RestMethod -Uri $releasesUrl -Headers $headers -Method Get
         $releases = $releases | Sort-Object -Property created_at
 
-
-
         foreach ($release in $releases)
         {
             Write-Log "Processing Package: $repoName Version: $($release.tag_name)" -Level "INFO"
-            Write-log "Total releases: $($releases.Count)" -Level "DEBUG"
             $version = if ($release.tag_name.StartsWith('v'))
             {
                 $release.tag_name.Substring(1)
@@ -177,29 +184,20 @@ try
                 $release.tag_name
             }
 
-            # Check if this version is already processed and published successfully
+            # Check if this version is already processed
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
             $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version
             Write-Log "Current state $existingState" -Level "DEBUG"
-            if ($null -ne $existingState)
+
+            # Skip processing if already processed
+            if ($existingState -and $existingState -ne "Failed")
             {
-                Write-Log ("Found existing state for {0} version {1}: {2}" -f $repoName, $version, $existingState) -Level "DEBUG"
-                if ($existingState -eq "Published" -or $existingState -eq "Skipped")
-                {
-                    Write-Log "Package $repoName version $version is already published successfully. Skipping." -Level "INFO"
-                    continue
-                }
-                elseif ($existingState -eq "Failed")
-                {
-                    Write-Log "Package $repoName version $version previously failed. Retrying..." -Level "WARNING"
-                    # Continue processing this version
-                }
+              Write-Log "Package $repoName version $version is already in state: $existingState. Skipping." -Level "INFO"
+              continue
             }
 
-            # Only proceed with processing if not already published
-            Write-Log "Processing $repoName version $version..." -Level "INFO"
-            # Update state to Processing
-            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Processing"
+            # Update state to Downloading
+            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading"
 
             # Update release notes before processing
             write-log "Updating release notes for $repoName version $version" -Level "INFO"
@@ -210,48 +208,36 @@ try
                 -ReleaseNotes $release.body `
                 -CreatedAt $release.created_at
 
-            # Invoke the release process
-            $result = Invoke-AvmRelease -Package @{
-                name            = $repoName
-                url             = $repo.html_url
-                ipmOrganization = $ipmOrganization
-            } -Release @{
-                version      = $version
-                published_at = $release.published_at
-                tarball_url  = $release.tarball_url
-            } -StagingRoot $StagingDirectory -GithubToken $GithubToken -table $releaseNotesTable -skipTests $false
+            # Download and extract the package
+            $moduleResult = Get-AvmTerraformModule -PackageName $repoName -Version $version -TarballUrl $release.tarball_url `
+                -StagingDirectory $StagingDirectory -GithubToken $GithubToken
 
-            Write-Log "Result InVoke-AvmRelease: $($result | ConvertTo-Json -Depth 3)" -Level "DEBUG"
-
-            if ($result.Success -eq $true)
+            if ($moduleResult.Success)
             {
-                write-log "Successfully processed $repoName version $version" -Level "INFO"
+                # Create build-for-ipm folder and copy files
+                $extractedPath = $moduleResult.ModulePath
+                $versionFolderPath = Split-Path $extractedPath -Parent
+                Copy-ExtractedToIpmBuild -ExtractedPath $extractedPath -VersionFolderPath $versionFolderPath
 
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Published"
-                $processedCount++
-            }
-            elseif ($result.Message -contains "Terraform validation failed for") {
-                Write-Log "Terraform validation failed for $repoName version $version. Marking as Skipped." -Level "ERROR"
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Skipped"
-                $failedCount++
-                $failedPackages += "$repoName v$version"
+                # Update state to Downloaded
+                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloaded"
+                $downloadedCount++
             }
             else
             {
-                Write-Log "Failed to process $repoName version $version : $($result.Message)" -Level "ERROR"
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $result.Message
+                Write-Log "Failed to download $repoName version $version : $($moduleResult.Message)" -Level "ERROR"
+                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message
                 $failedCount++
                 $failedPackages += "$repoName v$version"
             }
-
         }
     }
 
     # Send report to Teams if we have any results to report
-    if ($processedCount -gt 0 -or $failedCount -gt 0)
+    if ($downloadedCount -gt 0 -or $failedCount -gt 0)
     {
-        $reportMessage = "Processing completed with the following results:`n`n"
-        $reportMessage += "- Successfully processed: $processedCount packages/versions`n"
+        $reportMessage = "Package discovery and download completed with the following results:`n`n"
+        $reportMessage += "- Successfully downloaded: $downloadedCount packages/versions`n"
         $reportMessage += "- Failed: $failedCount packages/versions`n"
 
         if ($failedCount -gt 0)
@@ -263,32 +249,28 @@ try
             }
         }
 
-        if (-not [string]::IsNullOrWhiteSpace($reportMessage) -and -not [string]::IsNullOrWhiteSpace($TeamsWebhookUrl))
-        {
-            Send-TeamsNotification -Message $reportMessage -Color $(if ($failedCount -gt 0) { "FF0000" } else { "00FF00" })
-        }
     }
 
     # Log final status
     if ($failedCount -gt 0)
     {
-        Write-Log "Processing completed. Successful: $processedCount, Failed: $failedCount" -Level "WARNING"
+        Write-Log "Download process completed. Successful: $downloadedCount, Failed: $failedCount" -Level "WARNING"
     }
     else
     {
-        Write-Log "Processing completed. Successful: $processedCount, Failed: $failedCount" -Level "SUCCESS"
+        Write-Log "Download process completed. Successful: $downloadedCount, Failed: $failedCount" -Level "SUCCESS"
     }
 }
 catch
 {
-    Write-Log "Critical error in main execution:" -Level "ERROR"
+    Write-Log "Critical error in download execution:" -Level "ERROR"
     Write-Log "Error Message: $($_.Exception.Message)" -Level "ERROR"
     Write-Log "Error Details: $($_)" -Level "ERROR"
     Write-Log "Stack Trace: $($_.ScriptStackTrace)" -Level "ERROR"
 
     if (-not [string]::IsNullOrWhiteSpace($TeamsWebhookUrl) -and -not [string]::IsNullOrWhiteSpace($_.Exception.Message))
     {
-        Send-TeamsNotification -Message "Critical error in AVM package processing:`n$($_.Exception.Message)" -Title "AVM Processing Error" -Color "FF0000"
+        Send-TeamsNotification -Message "Critical error in AVM package download process:`n$($_.Exception.Message)" -WebhookUrl $TeamsWebhookUrl -Title "AVM Download Error" -Color "FF0000"
     }
     exit 1
 }

@@ -16,37 +16,15 @@ function Publish-ToIpm
 
     try
     {
-
-        #Trim terraform-azurerm-avm-res- prefix from package name
-        $PackageName = $PackageName -replace "terraform-azurerm-avm-res-", ""
-        $PackageName = $PackageName -replace "terraform-avm-azurerm-res-", ""
-
+        $version = $version -replace '-', '.'
+        if (-not (Get-Command -Name New-IpmPackageName -ErrorAction SilentlyContinue)) {
+            throw "The function 'New-IpmPackageName' is not defined or available in the current scope."
+        }
+        $PackageName = New-IpmPackageName -TerraformName $PackageName
         Write-Log "Publishing $PackageName v$Version to IPM..." -Level "INFO"
 
-        if ([string]::IsNullOrEmpty($PackageName))
-        {
-            return [PSCustomObject]@{
-                Success = $false
-                Message = "Package name cannot be empty"
-            }
-        }
-
-        if ($PackageName.Length -gt 36)
-        {
-            Write-Log "Package name $PackageName is more than 36 characters. Trimming to 36 characters." -Level "INFO"
-            $convertedPackageName = Convert-PackageName -PackageName $PackageName
-            if ($convertedPackageName -eq $false)
-            {
-                return [PSCustomObject]@{
-                    Success = $false
-                    Message = "Failed to convert package name: $PackageName"
-                }
-            }
-            $PackageName = $convertedPackageName
-        }
-
         $fullPackageName = "{0}/{1}" -f $ipmOrganization, $PackageName
-        $publishCommand = "ipm publish --package $fullPackageName --version $Version --folder $PackagePath --non-interactive"
+        $publishCommand = "ipm publish --package $fullPackageName --version $version --folder $PackagePath --non-interactive"
 
         if ($LocalRun)
         {
@@ -61,7 +39,7 @@ function Publish-ToIpm
             $process = Start-Process -FilePath $IpmClientPath -ArgumentList @(
                 "publish",
                 "--package", $fullPackageName,
-                "--version", $Version,
+                "--version", $version,
                 "--folder", $PackagePath,
                 "--non-interactive"
             ) -PassThru -Wait
@@ -76,8 +54,7 @@ function Publish-ToIpm
                 }
             }
 
-            $successMessage = "Successfully published $fullPackageName v$Version to IPM"
-            Write-Log $successMessage -Level "SUCCESS"
+            Write-Log "Successfully published $fullPackageName v$Version to IPM" -Level "SUCCESS"
             return [PSCustomObject]@{
                 Success = $true
                 Message = $successMessage

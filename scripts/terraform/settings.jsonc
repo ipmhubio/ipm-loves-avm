@@ -1,84 +1,64 @@
 {
-  "nameReplacementments": [
-    {
-      "search": "network-applicationgatewaywebapplicationfirewallpolicy",
-      "replacement": "network-appgw-waf-policy"
-    },
-    {
-      "search": "hybridcontainerservice-provisionedclusterinstance",
-      "replacement": "hcs-prov-cluster-instance"
-    },
-    {
-      "search": "terraform-avm-azurerm-res-compute-galleryimage",
-      "replacement": "compute-gallery-image"
-    },
-    {
-      "search": "network-frontdoorwebapplicationfirewallpolicy",
-      "replacement": "network-fd-waf-policy"
-    },
-    {
-      "search": "network-dnsforwardingrulesets-forwardingrules",
-      "replacement": "network-dns-fwd-rules"
-    },
-    {
-      "search": "oracledatabase-cloudexadatainfrastructure",
-      "replacement": "oracle-db-exadata-infra"
-    },
-    {
-      "search": "desktopvirtualization-applicationgroup",
-      "replacement": "desktop-virt-app-group"
-    },
-    {
-      "search": "managedidentity-userassignedidentity",
-      "replacement": "managed-id-user-assigned"
-    },
+  "nameReplacements": [
     {
       "search": "azurestackhci-virtualmachineinstance",
       "replacement": "azurestackhci-vm-instance"
     },
     {
-      "search": "sqlvirtualmachine-sqlvirtualmachine",
-      "replacement": "sql-vm-instance"
-    },
-    {
-      "search": "appconfiguration-configurationstore",
-      "replacement": "app-config-store"
-    },
-    {
-      "search": "machinelearningservices-workspace",
-      "replacement": "ml-services-workspace"
-    },
-    {
-      "search": "desktopvirtualization-scalingplan",
-      "replacement": "desktop-virt-scaling-plan"
+      "search": "compute-proximityplacementgroup",
+      "replacement": "compute-prox-placement-group"
     },
     {
       "search": "containerinstance-containergroup",
       "replacement": "container-instance-group"
     },
     {
-      "search": "network-applicationsecuritygroup",
-      "replacement": "network-app-security-group"
-    },
-    {
-      "search": "redhatopenshift-openshiftcluster",
-      "replacement": "rh-openshift-cluster"
-    },
-    {
       "search": "containerservice-managedcluster",
       "replacement": "container-svc-managed-cluster"
+    },
+    {
+      "search": "desktopvirtualization-applicationgroup",
+      "replacement": "desktop-virt-app-group"
+    },
+    {
+      "search": "desktopvirtualization-scalingplan",
+      "replacement": "desktop-virt-scaling-plan"
     },
     {
       "search": "desktopvirtualization-workspace",
       "replacement": "desktop-virt-workspace"
     },
     {
-      "search": "compute-proximityplacementgroup",
-      "replacement": "compute-proximity-place-group"
+      "search": "hybridcontainerservice-provisionedclusterinstance",
+      "replacement": "hybrid-cs-prov-cluster"
     },
     {
       "search": "insights-datacollectionendpoint",
-      "replacement": "insights-data-collection-ep"
+      "replacement": "insights-data-collect-endpoint"
+    },
+    {
+      "search": "machinelearningservices-workspace",
+      "replacement": "ml-services-workspace"
+    },
+    {
+      "search": "managedidentity-userassignedidentity",
+      "replacement": "managed-id-user-assigned"
+    },
+    {
+      "search": "network-applicationgatewaywebapplicationfirewallpolicy",
+      "replacement": "network-appgw-waf-policy"
+    },
+    {
+      "search": "network-applicationsecuritygroup",
+      "replacement": "network-app-security-group"
+    },
+    {
+      "search": "network-frontdoorwebapplicationfirewallpolicy",
+      "replacement": "network-fd-waf-policy"
+    },
+    {
+      "search": "oracledatabase-cloudexadatainfrastructure",
+      "replacement": "oracle-db-exadata-infra"
     }
   ]
 }

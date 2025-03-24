@@ -21,6 +21,9 @@ $ProgressPreference = "SilentlyContinue"
 Write-Verbose $PSScriptRoot
 Write-Verbose 'Import PowerShell subscripts'
 
+# Create an array to track functions to export
+$functionsToExport = @()
+
 # Dot source the files.
 ForEach ($Folder in @('Private', 'Public'))
 {
@@ -37,6 +40,13 @@ ForEach ($Folder in @('Private', 'Public'))
       {
         Write-Verbose "Importing '$($File.FullName)'"
         . $File.FullName
+
+        # If it's a public function, add to export list
+        if ($Folder -eq 'Public') {
+          # Extract function name from the file (assuming file name matches function name)
+          $functionName = $File.BaseName
+          $functionsToExport += $functionName
+        }
       }
       Catch
       {
@@ -46,14 +56,10 @@ ForEach ($Folder in @('Private', 'Public'))
   }
 }
 
-# Load all public functions
-$publicFuncFolder = Join-Path -Path $PSScriptRoot -ChildPath 'Public'
-$publicFunctions = Get-ChildItem -Path $publicFuncFolder -Filter '*.ps1'
-foreach ($function in $publicFunctions)
-{
-  . $function.FullName
-}
+# Remove the redundant function loading section
+# No need to load public functions twice
 
+# Export the functions that were loaded from the Public folder
 Export-ModuleMember -Function @(
   'Convert-PackageName',
   'Get-AvmTerraformModule',
@@ -61,11 +67,13 @@ Export-ModuleMember -Function @(
   'Get-NewReleases',
   'Get-PackageVersionState',
   'Get-PublishedPackages',
+  'Get-TableEntities',
   'Get-ReleaseArchive',
   'Initialize-AzureStorageTable',
   'Initialize-Environment',
   'Invoke-AvmRelease',
   'Invoke-IpmHubPackageEnsurance',
+  'New-IpmPackageName',
   'Publish-ToIpm',
   'Send-TeamsNotification',
   'Test-TerraformModule',
@@ -74,7 +82,6 @@ Export-ModuleMember -Function @(
   'Update-ReleaseNotes',
   'Update-TelemetryDefault',
   'Update-TelemetryDefaultInMarkdown',
-  'Write-Log'
-
+  'Write-Log',
+  'Get-ValidPackageName'
 )
-
