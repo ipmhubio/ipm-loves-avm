@@ -38,6 +38,9 @@ param (
     [string]$StorageAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==",
 
     [Parameter(Mandatory = $false)]
+    [string]$StorageSasToken,
+
+    [Parameter(Mandatory = $false)]
     [string]$TableName = "AvmPackageVersions",
 
     [Parameter(Mandatory = $false)]
@@ -155,7 +158,7 @@ try
             }
 
             # Update state to Downloading
-            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading"
+            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at
 
             # Update release notes before processing
             write-log "Updating release notes for $repoName version $version" -Level "INFO"
@@ -213,10 +216,12 @@ try
     if ($failedCount -gt 0)
     {
         Write-Log "Download process completed. Successful: $downloadedCount, Failed: $failedCount" -Level "WARNING"
+        Write-Log "Failed packages: $($failedPackages -join ', ')" -Level "WARNING"
     }
     else
     {
         Write-Log "Download process completed. Successful: $downloadedCount, Failed: $failedCount" -Level "SUCCESS"
+        write-log "reportMessage: $reportMessage" -Level "INFO"
     }
 }
 catch

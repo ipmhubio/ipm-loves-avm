@@ -15,7 +15,10 @@ function Update-PackageVersionState
         [string]$Status,
 
         [Parameter(Mandatory = $false)]
-        [string]$ErrorMessage
+        [string]$ErrorMessage,
+
+        [Parameter(Mandatory = $false)]
+        [string]$published
     )
 
     try
@@ -46,6 +49,12 @@ function Update-PackageVersionState
         if ($PSBoundParameters.ContainsKey('ErrorMessage') -and $null -ne $ErrorMessage)
         {
             $entity.Properties.Add("ErrorMessage", $ErrorMessage)
+        }
+
+        # Add published property if provided
+        if ($PSBoundParameters.ContainsKey('published') -and $null -ne $published)
+        {
+            $entity.Properties.Add("Published", $published)
         }
 
         Write-Log "Created entity with properties: $($entity.Properties | ConvertTo-Json)" -Level "DEBUG"
@@ -92,7 +101,6 @@ function Update-PackageVersionState
         return $false
     }
 }
-
 function Get-PackageVersionState
 {
     [CmdletBinding()]

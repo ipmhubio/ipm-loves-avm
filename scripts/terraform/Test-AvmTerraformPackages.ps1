@@ -82,7 +82,8 @@ try
         -UseAzurite $UseAzurite
 
     # Verify staging directory exists
-    if (-not (Test-Path $StagingDirectory)) {
+    if (-not (Test-Path $StagingDirectory))
+    {
         Write-Log "Staging directory does not exist: $StagingDirectory" -Level "ERROR"
         throw "Staging directory not found"
     }
@@ -91,36 +92,55 @@ try
     $packages = Get-ChildItem -Path $StagingDirectory -Directory
     $packagesToTest = @()
 
-    foreach ($packageDir in $packages) {
-      $packageName = $packageDir.Name
-      Write-Log "Processing package directory: $packageName" -Level "INFO"
+    foreach ($packageDir in $packages)
+    {
+        $packageName = $packageDir.Name
+        Write-Log "Processing package directory: $packageName" -Level "INFO"
 
-      # Get all version directories for this package
-      $versionDirs = Get-ChildItem -Path $packageDir.FullName -Directory
-      Write-Log "Found $($versionDirs.Count) version directories for package: $packageName" -Level "INFO"
+        # Get all version directories for this package
+        $versionDirs = Get-ChildItem -Path $packageDir.FullName -Directory
+        Write-Log "Found $($versionDirs.Count) version directories for package: $packageName" -Level "INFO"
 
-      foreach ($versionDir in $versionDirs) {
-        $version = $versionDir.Name
-        Write-Log "Processing version directory: $version for package: $packageName" -Level "INFO"
+        # Sort version directories by semantic version (lowest first)
+        $versionDirs = $versionDirs | Sort-Object {
+            $version = $_.Name -replace '^v', '' # Remove leading 'v' if present
+            $versionParts = $version.Split('.')
 
-        # Check if the build-for-ipm folder exists in this version directory
-        $buildForIpmPath = Join-Path -Path $versionDir.FullName -ChildPath "build-for-ipm"
-        Write-Log "Checking for build-for-ipm folder at path: $buildForIpmPath" -Level "INFO"
+            # Create a sortable array of integers (padding with zeros for comparison)
+            $major = [int]($versionParts[0] ?? 0)
+            $minor = [int]($versionParts[1] ?? 0)
+            $patch = [int]($versionParts[2] ?? 0)
 
-        if (Test-Path $buildForIpmPath) {
-          Write-Log "Found build-for-ipm folder for package: $packageName version: $version" -Level "SUCCESS"
-          $packagesToTest += [PSCustomObject]@{
-            PackageName = $packageName
-            Version = $version
-            Path = $buildForIpmPath
-          }
+            # Return a composite sortable value
+            return ($major * 1000000) + ($minor * 1000) + $patch
         }
-        else {
-          Write-Log "build-for-ipm folder not found for package: $packageName version: $version" -Level "WARNING"
+
+        Write-Log "Sorted version directories: $($versionDirs.Name -join ', ')" -Level "INFO"
+
+        foreach ($versionDir in $versionDirs)
+        {
+            $version = $versionDir.Name
+            Write-Log "Processing version directory: $version for package: $packageName" -Level "INFO"
+
+            # Check if the build-for-ipm folder exists in this version directory
+            $buildForIpmPath = Join-Path -Path $versionDir.FullName -ChildPath "build-for-ipm"
+            Write-Log "Checking for build-for-ipm folder at path: $buildForIpmPath" -Level "INFO"
+
+            if (Test-Path $buildForIpmPath)
+            {
+                Write-Log "Found build-for-ipm folder for package: $packageName version: $version" -Level "SUCCESS"
+                $packagesToTest += [PSCustomObject]@{
+                    PackageName = $packageName
+                    Version     = $version
+                    Path        = $buildForIpmPath
+                }
+            }
+            else
+            {
+                Write-Log "build-for-ipm folder not found for package: $packageName version: $version" -Level "WARNING"
+            }
         }
-      }
     }
-
     Write-Log "Found $($packagesToTest.Count) packages to test" -Level "INFO"
 
     # Get all packages with 'Downloaded' status from the table
@@ -138,7 +158,8 @@ try
             $_.PartitionKey -ieq $packageName -and $_.RowKey -ieq $versionDash
         }
 
-        if (-not $matchingTableEntry) {
+        if (-not $matchingTableEntry)
+        {
             Write-Log "Skipping package: $packageName version: $version - not in 'Downloaded' status in the table" -Level "INFO"
             continue
         }
@@ -149,7 +170,8 @@ try
         Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Testing"
 
         # Package path is directly from our directory scan
-        if (-not (Test-Path $packagePath)) {
+        if (-not (Test-Path $packagePath))
+        {
             Write-Log "Package path does not exist: $packagePath" -Level "ERROR"
             Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found"
             $failedCount++
@@ -159,11 +181,13 @@ try
 
         # Test the terraform module
         $testSuccess = $true
-        if (-not $SkipTests) {
+        if (-not $SkipTests)
+        {
             Write-Log "Running terraform validation for $packageName v$version" -Level "INFO"
             $testSuccess = Test-TerraformModule -ModulePath $packagePath
         }
-        else {
+        else
+        {
             Write-Log "Skipping terraform validation for $packageName v$version" -Level "INFO"
         }
 
@@ -204,13 +228,15 @@ try
         }
         Add-DisclaimerFile -PackageName $packageName -Path $packagePath
 
-        if ($testSuccess) {
+        if ($testSuccess)
+        {
             # Update state to Tested
             Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Tested"
             $testedCount++
             Write-Log "Successfully tested $packageName v$version" -Level "SUCCESS"
         }
-        else {
+        else
+        {
             # Update state to Failed
             Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Terraform validation failed"
             $failedCount++
