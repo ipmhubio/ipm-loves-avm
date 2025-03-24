@@ -118,54 +118,12 @@ try
 
     Write-Log "Found total of $($allRepoItems.Count) repositories" -Level "INFO"
 
-    # #Check if package is already created in IPMHub.
-    # #fist create an array of all distinct pages from the search result
-    # $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
-    #     $repoName = $_
-    #     $repoName
-    # }
-    # #list all distinct packages from the storage table and compare with the search result
-    # $allTableItems = Get-PublishedPackages -Table $table
-
-    # #compare the two arrays
-    # # Create array to store new packages
-    # $newPackages = @()
-
-    # $allRepoItems | Select-Object -ExpandProperty name -Unique | ForEach-Object {
-    #     $repoName = $_
-    #     if ($allTableItems -contains $repoName)
-    #     {
-    #         Write-Log "Package $repoName already exists in IPMHub" -Level "INFO"
-    #     }
-    #     else
-    #     {
-    #         Write-Log "Package $repoName does not exist in IPMHub" -Level "INFO"
-    #         # Add the package to the newPackages array
-    #         $newPackages += [PSCustomObject]@{
-    #             Name = $repoName
-    #             Description = ($allRepoItems | Where-Object { $_.name -eq $repoName }).description
-    #         }
-    #     }
-    # }
-
-    # # If there are new packages, create them in IPMHub
-    # if ($newPackages.Count -gt 0) {
-    #     Write-Log "Creating $($newPackages.Count) new packages in IPMHub" -Level "INFO"
-    #     $isLocalRun = $localrun
-    #     Write-Log "local run is set to: $($isLocalRun)" -level "DEBUG"
-
-    #     Invoke-IpmHubPackageEnsurance `
-    #         -Packages $newPackages `
-    #         -PackageCreationApi "https://api.ipmhub.io/packages" `
-    #         -OrganizationName $ipmOrganization `
-    #         -LocalRun $localrun
-    # }
-
     # Process each repository to download new packages
     foreach ($repo in $allRepoItems)
     {
         $repoName = $repo.name
         Write-Log "Processing repository: $repoName" -Level "INFO"
+        Write-log "check if $repoName is already in table" -Level "INFO"
 
         # Get releases for this repository
         $releasesUrl = "https://api.github.com/repos/Azure/$repoName/releases"
@@ -190,10 +148,10 @@ try
             Write-Log "Current state $existingState" -Level "DEBUG"
 
             # Skip processing if already processed
-            if ($existingState -and $existingState -ne "Failed")
+            if ($existingState -and ($existingState -eq "Failed" -or $existingState -eq "Published" -or $existingState -eq "Published-tested"))
             {
-              Write-Log "Package $repoName version $version is already in state: $existingState. Skipping." -Level "INFO"
-              continue
+                Write-Log "Package $repoName version $version is already in state: $existingState. Skipping." -Level "INFO"
+                continue
             }
 
             # Update state to Downloading

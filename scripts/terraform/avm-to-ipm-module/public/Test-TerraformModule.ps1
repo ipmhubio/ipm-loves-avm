@@ -33,6 +33,8 @@ function Test-TerraformModule {
         # Cleanup regardless of success/failure
         Write-Log "Cleaning up terraform files..." -Level "INFO"
         if (Test-Path ".terraform") { Remove-Item -Path ".terraform" -Recurse -Force }
+        if (Test-Path "logs") { Remove-Item -Path "logs" -Recurse -Force }
+        if (Test-Path "test") { Remove-Item -Path "tests" -Recurse -Force }
         if (Test-Path "*.log") { Remove-Item -Path "*.log" -Force }
         if (Test-Path ".terraform.lock.hcl") { Remove-Item -Path ".terraform.lock.hcl" -Force }
 

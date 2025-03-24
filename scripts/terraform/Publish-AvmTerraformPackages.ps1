@@ -124,11 +124,48 @@ try
     $isLocalRun = $LocalRun
     Write-Log "local run is set to: $($isLocalRun)" -level "DEBUG"
 
-    Invoke-IpmHubPackageEnsurance `
+    $packageEnsuranceResult = Invoke-IpmHubPackageEnsurance `
         -Packages $newPackages `
         -PackageCreationApi $logicAppUrl `
         -OrganizationName $ipmOrganization `
         -LocalRun $LocalRun
+
+    # Report on package creation results
+    if ($packageEnsuranceResult.Failed -gt 0)
+    {
+        Write-Log "WARNING: Some packages failed to be registered in IPMHub" -Level "WARNING"
+        Write-Log "Failed packages:" -Level "WARNING"
+        foreach ($failedPkg in $packageEnsuranceResult.FailedPackages)
+        {
+            Write-Log "  - $($failedPkg.packageName) (Status code: $($failedPkg.statusCode))" -Level "WARNING"
+        }
+    }
+
+    # Report on successful packages (limited to 10)
+    if ($packageEnsuranceResult.Successful -gt 0)
+    {
+        Write-Log "Successfully registered packages in IPMHub:" -Level "INFO"
+        foreach ($successPkg in $packageEnsuranceResult.SuccessfulPackages)
+        {
+            Write-Log "  - $($successPkg.packageName) (latest version: $($successPkg.latestVersion))" -Level "INFO"
+        }
+
+        if ($packageEnsuranceResult.Successful -gt 10)
+        {
+            Write-Log "  ...and $($packageEnsuranceResult.Successful - 10) more packages" -Level "INFO"
+        }
+    }
+
+    # Report on new vs updated packages
+    if ($packageEnsuranceResult.New -gt 0)
+    {
+        Write-Log "Created $($packageEnsuranceResult.New) new packages in IPMHub" -Level "INFO"
+    }
+
+    if ($packageEnsuranceResult.Updated -gt 0)
+    {
+        Write-Log "Updated $($packageEnsuranceResult.Updated) existing packages in IPMHub" -Level "INFO"
+    }
 
     foreach ($packageEntity in $packagesToPublish)
     {
@@ -191,6 +228,63 @@ try
     {
         Write-Log "Publishing process completed. Successful: $publishedCount, Failed: $failedCount" -Level "SUCCESS"
     }
+
+    # Generate and display complete process summary
+    Write-Log "===== AVM TERRAFORM PACKAGE PROCESSING SUMMARY =====" -Level "INFO"
+
+    # Package Registration Summary
+    Write-Log "PACKAGE REGISTRATION:" -Level "INFO"
+    Write-Log "  Total Packages Processed: $($packageEnsuranceResult.TotalProcessed)" -Level "INFO"
+    Write-Log "  Successfully Registered: $($packageEnsuranceResult.Successful)" -Level "INFO"
+    Write-Log "  Failed Registration: $($packageEnsuranceResult.Failed)" -Level "INFO"
+    Write-Log "  Newly Created Packages: $($packageEnsuranceResult.New)" -Level "INFO"
+    Write-Log "  Updated Packages: $($packageEnsuranceResult.Updated)" -Level "INFO"
+
+    # Package Publishing Summary
+    Write-Log "PACKAGE VERSION PUBLISHING:" -Level "INFO"
+    Write-Log "  Total Versions Processed: $($packagesToPublish.Count)" -Level "INFO"
+    Write-Log "  Successfully Published: $publishedCount" -Level "INFO"
+    Write-Log "  Failed to Publish: $failedCount" -Level "INFO"
+
+    # Detailed Failed Package Information
+    if ($failedCount -gt 0)
+    {
+        Write-Log "FAILED PACKAGE VERSIONS:" -Level "WARNING"
+        foreach ($failedPackage in $failedPackages)
+        {
+            Write-Log "  - $failedPackage" -Level "WARNING"
+        }
+    }
+
+    # Send summary to Teams if webhook URL is provided
+    if (-not [string]::IsNullOrWhiteSpace($TeamsWebhookUrl))
+    {
+        $color = if ($failedCount -gt 0 -or $packageEnsuranceResult.Failed -gt 0) { "FFA500" } else { "00FF00" }
+        $summaryMessage = @"
+## AVM Terraform Package Processing Summary
+### Package Registration:
+- Total Processed: $($packageEnsuranceResult.TotalProcessed)
+- Successfully Registered: $($packageEnsuranceResult.Successful)
+- Failed Registration: $($packageEnsuranceResult.Failed)
+- Newly Created: $($packageEnsuranceResult.New)
+- Updated: $($packageEnsuranceResult.Updated)
+
+### Package Version Publishing:
+- Total Versions: $($packagesToPublish.Count)
+- Successfully Published: $publishedCount
+- Failed: $failedCount
+"@
+
+        if ($failedCount -gt 0)
+        {
+            $summaryMessage += "`n`n**Failed Package Versions:**`n"
+            $summaryMessage += ($failedPackages | ForEach-Object { "- $_" }) -join "`n"
+        }
+
+        Send-TeamsNotification -Message $summaryMessage -WebhookUrl $TeamsWebhookUrl -Title "AVM Terraform Package Processing Report" -Color $color
+    }
+
+    Write-Log "=================================================" -Level "INFO"
 }
 catch
 {

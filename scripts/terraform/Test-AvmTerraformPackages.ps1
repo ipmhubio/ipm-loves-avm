@@ -123,11 +123,25 @@ try
 
     Write-Log "Found $($packagesToTest.Count) packages to test" -Level "INFO"
 
+    # Get all packages with 'Downloaded' status from the table
+    $downloadedPackages = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Downloaded" }
+    Write-Log "Found $($downloadedPackages.Count) packages with 'Downloaded' status in the table" -Level "INFO"
+    WRITE-LOG "Downloaded packages: $($downloadedPackages | ConvertTo-Json -Depth 10)" -Level "DEBUG"
     foreach ($package in $packagesToTest)
     {
         $packageName = $package.PackageName
         $version = $package.Version
         $packagePath = $package.Path
+        # Check if this package is in the downloaded packages list
+        $versionDash = $version.Replace(".", "-") # Convert version to match table format
+        $matchingTableEntry = $downloadedPackages | Where-Object {
+            $_.PartitionKey -ieq $packageName -and $_.RowKey -ieq $versionDash
+        }
+
+        if (-not $matchingTableEntry) {
+            Write-Log "Skipping package: $packageName version: $version - not in 'Downloaded' status in the table" -Level "INFO"
+            continue
+        }
 
         Write-Log "Testing package: $packageName version: $version" -Level "INFO"
 
@@ -188,6 +202,7 @@ try
             }
             $result
         }
+        Add-DisclaimerFile -PackageName $packageName -Path $packagePath
 
         if ($testSuccess) {
             # Update state to Tested

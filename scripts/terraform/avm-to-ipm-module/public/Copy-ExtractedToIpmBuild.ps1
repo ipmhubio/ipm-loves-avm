@@ -23,6 +23,7 @@ function Copy-ExtractedToIpmBuild
         $_.FullName -notmatch '\\tests\\' -and
         # Exclude avm.bat
         $_.Name -ne 'avm.bat' -and
+        $_.Name -ne 'avm' -and
         # Exclude .log files
         $_.Extension -ne '.log' -and
         # exclude Makefile, avm CODE_OF_CONDUCT.md
