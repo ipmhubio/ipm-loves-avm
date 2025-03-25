@@ -92,7 +92,7 @@ try
     }
 
     # Get all packages that are in Tested state from the table
-    $packagesToPublish = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Tested" } #todo failed moet weg
+    $packagesToPublish = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Tested" }
 
     Write-Log "Found $($packagesToPublish.Count) packages to publish" -Level "INFO"
 

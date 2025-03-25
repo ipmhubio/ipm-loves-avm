@@ -21,6 +21,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
           SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
           $params = @{
             GithubToken = $env:GITHUB_TOKEN
@@ -28,7 +29,7 @@ jobs:
             StorageAccountName = "ipmhubsponstor01weust"
             StorageSasToken = $env:SAS_TOKEN
             TableName = "AvmPackageVersions"
-            TeamsWebhookUrl = "https://outlook.office.com/webhook/your-teams-webhook-url"
+            TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF
             TableNameReleaseNotes = "AvmPackageReleaseNotes"
             UseAzurite = $false
           }
@@ -118,6 +119,7 @@ jobs:
           IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS-TF-AVM }}
           SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
           PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
+          TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
           $params = @{
             localRun = $false
@@ -127,6 +129,7 @@ jobs:
             StorageSasToken = $env:SAS_TOKEN
             TableName = "AvmPackageVersions"
             TableNameReleaseNotes = "AvmPackageReleaseNotes"
+            TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF
             UseAzurite = $false
           }
           pwsh -File ./scripts/terraform/Publish-AvmTerraformPackages.ps1 @params
