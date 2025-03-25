@@ -36,7 +36,7 @@ function Publish-ToIpm
         }
         else
         {
-            $process = Start-Process -FilePath $IpmClientPath -ArgumentList @(
+            $process = Start-Process -FilePath ipm -ArgumentList @(
                 "publish",
                 "--package", $fullPackageName,
                 "--version", $version,

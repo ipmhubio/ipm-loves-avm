@@ -37,13 +37,13 @@ param (
     [string]$StorageAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==",
 
     [Parameter(Mandatory = $false)]
+    [string]$StorageSasToken,
+
+    [Parameter(Mandatory = $false)]
     [string]$TableName = "AvmPackageVersions",
 
     [Parameter(Mandatory = $false)]
     [string]$StagingDirectory = "staging",
-
-    [Parameter(Mandatory = $false)]
-    [string]$IpmClientPath = "ipm",
 
     [Parameter(Mandatory = $false)]
     [string]$ipmOrganization = "avm-tf",
@@ -79,9 +79,10 @@ try
     # Initialize Azure Storage Table with Azurite support
     $table = Initialize-AzureStorageTable `
         -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
+        -SasToken $StorageSasToken `
         -TableName $TableName `
         -UseAzurite $UseAzurite
+
 
     # Verify staging directory exists
     if (-not (Test-Path $StagingDirectory))

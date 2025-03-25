@@ -32,6 +32,9 @@ param (
     [string]$StorageAccountKey = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==",
 
     [Parameter(Mandatory = $false)]
+    [string]$StorageSasToken,
+
+    [Parameter(Mandatory = $false)]
     [string]$TableName = "AvmPackageVersions",
 
     [Parameter(Mandatory = $false)]
@@ -71,13 +74,13 @@ try
     # Initialize Azure Storage Table with Azurite support
     $table = Initialize-AzureStorageTable `
         -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
+        -SasToken $StorageSasToken `
         -TableName $TableName `
         -UseAzurite $UseAzurite
 
     $releaseNotesTable = Initialize-AzureStorageTable `
         -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
+        -SasToken $StorageSasToken `
         -TableName $TableNameReleaseNotes `
         -UseAzurite $UseAzurite
 
@@ -144,7 +147,7 @@ try
     Write-Log "Found $($packagesToTest.Count) packages to test" -Level "INFO"
 
     # Get all packages with 'Downloaded' status from the table
-    $downloadedPackages = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Downloaded" }
+    $downloadedPackages = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
     Write-Log "Found $($downloadedPackages.Count) packages with 'Downloaded' status in the table" -Level "INFO"
     WRITE-LOG "Downloaded packages: $($downloadedPackages | ConvertTo-Json -Depth 10)" -Level "DEBUG"
     foreach ($package in $packagesToTest)

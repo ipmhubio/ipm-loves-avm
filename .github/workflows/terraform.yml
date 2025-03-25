@@ -1,0 +1,132 @@
+name: Maintain IPMHub Terraform AVM modules
+
+on:
+  schedule:
+    - cron: '0 5 * * *' # Every day at 06.00
+  workflow_dispatch:
+
+jobs:
+  download:
+    name: Download AVM Terraform Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: PowerShell/PowerShell-Action@v1
+        with:
+          pwsh-version: '7.2'
+      - name: Run Download Script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
+          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+        run: |
+          $params = @{
+            GithubToken = $env:GITHUB_TOKEN
+            StagingDirectory = "staging"
+            StorageAccountName = "ipmhubsponstor01weust"
+            StorageSasToken = $env:SAS_TOKEN
+            TableName = "AvmPackageVersions"
+            TeamsWebhookUrl = "https://outlook.office.com/webhook/your-teams-webhook-url"
+            TableNameReleaseNotes = "AvmPackageReleaseNotes"
+            UseAzurite = $false
+          }
+          pwsh -File ./scripts/terraform/Get-AvmTerraformPackages.ps1 @params
+
+      - name: Upload staging directory as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: staging-download
+          path: scripts/terraform/staging
+          retention-days: 1
+
+  test:
+    name: Test AVM Terraform Packages
+    needs: download
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: PowerShell/PowerShell-Action@v1
+        with:
+          pwsh-version: '7.2'
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.11.1'
+
+      - name: Download staging directory
+        uses: actions/download-artifact@v3
+        with:
+          name: staging-download
+          path: scripts/terraform/staging
+
+      - name: Run Test Script
+        env:
+          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+        run: |
+          $params = @{
+            StagingDirectory = "staging"
+            SkipTests = $false
+            StorageAccountName = "ipmhubsponstor01weust"
+            StorageSasToken = $env:SAS_TOKEN
+            TableName = "AvmPackageVersions"
+            TableNameReleaseNotes = "AvmPackageReleaseNotes"
+            UseAzurite = $false
+          }
+          pwsh -File ./scripts/terraform/Test-AvmTerraformPackages.ps1 @params
+
+      - name: Upload tested staging directory as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: staging-tested
+          path: scripts/terraform/staging
+          retention-days: 1
+
+  publish:
+    name: Publish AVM Terraform Packages to IPM
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        uses: PowerShell/PowerShell-Action@v1
+        with:
+          pwsh-version: '7.2'
+
+      - name: Install IPM CLI
+        shell: bash
+        run: |
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            tar -xzf ipm-cli.tar.gz
+            sudo mv ./ipm /usr/local/bin/ipm
+
+      - name: Download tested staging directory
+        uses: actions/download-artifact@v3
+        with:
+          name: staging-tested
+          path: scripts/terraform/staging
+
+      - name: Run Test Script
+        env:
+          IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS-TF-AVM }}
+          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
+        run: |
+          $params = @{
+            localRun = $false
+            logicAppUrl = $env:PACKAGE_CREATION_API
+            StorageAccountName = "ipmhubsponstor01weust"
+            StagingDirectory = "staging"
+            StorageSasToken = $env:SAS_TOKEN
+            TableName = "AvmPackageVersions"
+            TableNameReleaseNotes = "AvmPackageReleaseNotes"
+            UseAzurite = $false
+          }
+          pwsh -File ./scripts/terraform/Publish-AvmTerraformPackages.ps1 @params

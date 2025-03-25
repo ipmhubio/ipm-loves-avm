@@ -83,13 +83,13 @@ try
     # Initialize Azure Storage Table with Azurite support
     $table = Initialize-AzureStorageTable `
         -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
+        -SasToken $StorageSasToken `
         -TableName $TableName `
         -UseAzurite $UseAzurite
 
     $releaseNotesTable = Initialize-AzureStorageTable `
         -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
+        -SasToken $StorageSasToken `
         -TableName $TableNameReleaseNotes `
         -UseAzurite $UseAzurite
 
