@@ -128,7 +128,9 @@ function Invoke-AvmRelease
         }
         $result
     }
-
+    # add disclaimer file
+    Write-Log "Adding disclaimer file for $repoName version $version" -Level "INFO"
+    Add-DisclaimerFile -PackageName $package.name -Path $buildForIpmPath
 
     # Test Terraform module
     if ($skipTests)
@@ -154,24 +156,24 @@ function Invoke-AvmRelease
     }
 
     # Check if running locally
-    $isLocalRun = [bool]($env:LOCAL_RUN)
+    # $isLocalRun = [bool]($env:LOCAL_RUN)
 
     # Publish to IPM
-    $publishResult = Publish-ToIpm `
-        -PackagePath $buildForIpmPath `
-        -PackageName $packageName `
-        -ipmOrganization $ipmOrganization `
-        -Version $version `
-        -LocalRun $isLocalRun
-    Write-Log "!Publish result: $($publishResult | ConvertTo-Json -Depth 10)" -Level "INFO"
+    # $publishResult = Publish-ToIpm `
+    #     -PackagePath $buildForIpmPath `
+    #     -PackageName $packageName `
+    #     -ipmOrganization $ipmOrganization `
+    #     -Version $version `
+    #     -LocalRun $isLocalRun
+    # Write-Log "!Publish result: $($publishResult | ConvertTo-Json -Depth 10)" -Level "INFO"
 
-    if ($publishResult.Success -eq $false)
-    {
-        $result.Success = $false
-        $result.Message = "Failed to publish $packageName v$version"
-        Write-Log $result.Message -Level "ERROR"
-        return $result
-    }
+    # if ($publishResult.Success -eq $false)
+    # {
+    #     $result.Success = $false
+    #     $result.Message = "Failed to publish $packageName v$version"
+    #     Write-Log $result.Message -Level "ERROR"
+    #     return $result
+    # }
     Write-Log "Done processing $packageName v$version" -Level "INFO"
 
     # Set success message before returning

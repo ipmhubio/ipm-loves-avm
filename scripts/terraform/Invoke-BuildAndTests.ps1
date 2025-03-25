@@ -149,18 +149,7 @@ try
     }
 
     # If there are new packages, create them in IPMHub
-    if ($newPackages.Count -gt 0) {
-        Write-Log "Creating $($newPackages.Count) new packages in IPMHub" -Level "INFO"
-        # Convert string "1" to boolean using simple comparison
-        $isLocalRun = $env:LOCAL_RUN -eq "1"
-        Write-Log "local run is set to: $($isLocalRun)" -level "DEBUG"
 
-        $result = Invoke-IpmHubPackageEnsurance `
-            -Packages $newPackages `
-            -PackageCreationApi "https://api.ipmhub.io/packages" `
-            -OrganizationName $ipmOrganization `
-            -LocalRun $isLocalRun
-    }
     # Process each repository
 
     foreach ($repo in $allRepoItems)
@@ -220,6 +209,8 @@ try
                 -Version $version `
                 -ReleaseNotes $release.body `
                 -CreatedAt $release.created_at
+
+
 
             # Invoke the release process
             $result = Invoke-AvmRelease -Package @{
