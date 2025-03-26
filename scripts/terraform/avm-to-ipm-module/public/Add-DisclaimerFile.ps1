@@ -2,10 +2,10 @@
 .SYNOPSIS
     Creates a disclaimer file for AVM module packages.
 .DESCRIPTION
-    This function creates a DISCLAIMER.MD file in the specified path, using a template
+    This function creates a DISCLAIMER.md file in the specified path, using a template
     where the package name is inserted in the appropriate places.
 .PARAMETER Path
-    The directory path where the DISCLAIMER.MD file should be created.
+    The directory path where the DISCLAIMER.md file should be created.
 .PARAMETER PackageName
     The name of the AVM package to be referenced in the disclaimer.
 .EXAMPLE
@@ -26,7 +26,7 @@ function Add-DisclaimerFile {
 
 This package is a wrapper around the Microsoft AVM module [$PackageName](https://github.com/Azure/$PackageName), which is available under the MIT License. \
 The original Microsoft AVM modules and their associated components are developed and maintained by Microsoft Corporation.\
-This AVM module was first seen on 2025-03-14T12:04:53Z.\
+
 Please see [docs page](https://azure.github.io/Azure-Verified-Modules/indexes/bicep/bicep-resource-modules/).
 
 ## Important Notes
@@ -40,18 +40,18 @@ By using this package, you acknowledge and agree to these terms.
 
 ## License
 
-This package is licensed under the MIT License. Please see the [LICENSE](LICENSE.txt) file for more information.
+This package is licensed under the MIT License. Please see the [LICENSE](LICENSE) file for more information.
 "@
 
-    $disclaimerPath = Join-Path -Path $Path -ChildPath "DISCLAIMER.MD"
+    $disclaimerPath = Join-Path -Path $Path -ChildPath "DISCLAIMER.md"
 
     try {
         Set-Content -Path $disclaimerPath -Value $disclaimerContent -Force
-        Write-Log "Created DISCLAIMER.MD file for $PackageName in $Path" -Level "INFO"
+        Write-Log "Created DISCLAIMER.md file for $PackageName in $Path" -Level "INFO"
         return $true
     }
     catch {
-        Write-Log "Failed to create DISCLAIMER.MD file: $($_.Exception.Message)" -Level "ERROR"
+        Write-Log "Failed to create DISCLAIMER.md file: $($_.Exception.Message)" -Level "ERROR"
         return $false
     }
 }

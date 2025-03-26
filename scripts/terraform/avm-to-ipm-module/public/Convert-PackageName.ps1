@@ -10,7 +10,12 @@ function Convert-PackageName {
 
     try {
         # Read and parse the settings file
+        if (-not (Test-Path -Path $SettingsPath)) {
+            Write-log "Settings file not found at path: $SettingsPath" -level "ERROR"
+            return $false
+        }
         $settingsContent = Get-Content -Path $SettingsPath -Raw
+
         $settings = $settingsContent | ConvertFrom-Json
 
         # Start with the input string
@@ -18,11 +23,13 @@ function Convert-PackageName {
         $replacementMade = $false
 
         # Apply each replacement in order
-        foreach ($replacement in $settings.nameReplacementments) {
+        foreach ($replacement in $settings.nameReplacements) {
             if ($result -eq $replacement.search) {
                 $result = $replacement.replacement
                 $replacementMade = $true
+                Write-log "Converted package name '$packageName' to '$result'" -level "INFO"
                 break # Exit after first exact match
+
             }
         }
 

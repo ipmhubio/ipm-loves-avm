@@ -4,15 +4,11 @@ Function Invoke-IpmHubPackageEnsurance
   [CmdletBinding()]
   Param(
     [Parameter(Mandatory = $True)]
-    [PsCustomObject] $Packages,
+    [PsCustomObject[]] $Packages,
 
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [String] $PackageCreationApi,
-
-    [Parameter(Mandatory = $True)]
-    [ValidateNotNullOrEmpty()]
-    [String] $OrganizationName,
 
     [Parameter(Mandatory = $False)]
     [bool]$LocalRun = $False
@@ -27,26 +23,18 @@ Function Invoke-IpmHubPackageEnsurance
 
   Process
   {
-    # Determine if the input is already structured with packages array or needs extraction
-    if ($Packages.packages) {
-      $PackageData = $Packages.packages
-      # If organizationName is in the packages object and not provided separately, use it
-      if ([string]::IsNullOrEmpty($OrganizationName) -and $Packages.organizationName) {
-        $OrganizationName = $Packages.organizationName
-      }
-    } else {
-      # Treat input as direct array of packages
-      $PackageData = $Packages
-    }
 
     # Log the package data for troubleshooting
     Write-Log "Package data to process: $($PackageData.Count) packages" -Level "INFO"
 
-    $Headers = @{ "Content-Type" = "application/json" }
-    $Payload = @{
-      organizationName = $OrganizationName
-      packages         = $PackageData
-    } | ConvertTo-Json -Depth 10
+    $PackageData = [Array] ($Packages | ForEach-Object {
+      @{
+        packageName = $_.Name
+        description = ($_.Description ?? "")
+        descriptionLang = ($_.descriptionLang ?? "en")
+        projectUri = ($_.projectUri ?? "https://ipmhub.io/avm-terraform")
+      }
+    }) ?? @()
 
     if ($LocalRun)
     {
@@ -67,7 +55,11 @@ Function Invoke-IpmHubPackageEnsurance
     else
     {
       write-log "Sending package creation request to IPMHub API" -level "INFO"
+      $Headers = @{ "Content-Type" = "application/json" }
+      $Payload = @{ organizationName = "avm-terraform"; packages = $PackageData } | ConvertTo-Json -Depth 10
+      write-log "Payload for IPMHub API: $Payload " -level "DEBUG"
       $Response = Invoke-RestMethod -Uri $PackageCreationApi -Method "Post" -Headers $Headers -Body $Payload
+      $Response
     }
     write-log "Received response from IPMHub API: $($Response | ConvertTo-Json -Depth 10)" -level "INFO"
 

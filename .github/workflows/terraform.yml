@@ -128,7 +128,6 @@ jobs:
             StagingDirectory = "staging"
             StorageSasToken = $env:SAS_TOKEN
             TableName = "AvmPackageVersions"
-            TableNameReleaseNotes = "AvmPackageReleaseNotes"
             TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF
             UseAzurite = $false
           }

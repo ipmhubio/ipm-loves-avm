@@ -46,7 +46,7 @@ param (
     [string]$StagingDirectory = "staging",
 
     [Parameter(Mandatory = $false)]
-    [string]$ipmOrganization = "avm-tf",
+    [string]$ipmOrganization = "avm-terraform",
 
     [Parameter(Mandatory = $false)]
     [string]$TeamsWebhookUrl,
@@ -102,25 +102,23 @@ try
     write-Log "Found $($distinctPackages.Count) distinct packages to publish" -Level "INFO"
     write-log "Distinct packages: $($distinctPackages | Out-String)" -Level "DEBUG"
 
-    $newPackages = @{
-        organizationName = $ipmOrganization
-        packages         = @(
-            foreach ($package in $distinctPackages)
-            {
-                $IPMPackageName = New-IpmPackageName -TerraformName $package.PartitionKey
-                @{
-                    packageName     = $IPMPackageName
-                    description     = "This Terraform Azure Verified Module deploys: $($package.PartitionKey)"
-                    descriptionLang = "EN"
-                    projectUri      = "https://ipmhub.io/avm-terraform"
-                }
+    $newPackages = @(
+        foreach ($package in $distinctPackages)
+        {
+            $IPMPackageName = New-IpmPackageName -TerraformName $package.PartitionKey
+            @{
+                Name     = $IPMPackageName
+                description     = "This Terraform Azure Verified Module deploys: $($package.PartitionKey)"
+                descriptionLang = "EN"
+                projectUri      = "https://ipmhub.io/avm-terraform"
             }
-        )
-    }
+        }
+    )
 
 
-    Write-Log "Creating $($newPackages.packages.Count) new packages in IPMHub" -Level "INFO"
-    Write-Log "New packages: $($newPackages.packages | Out-String)" -Level "DEBUG"
+
+    Write-Log "Creating $($newPackages.Count) new packages in IPMHub" -Level "INFO"
+    Write-Log "New packages: $($newPackages | Out-String)" -Level "DEBUG"
     # Convert string "1" to boolean using simple comparison
     $isLocalRun = $LocalRun
     Write-Log "local run is set to: $($isLocalRun)" -level "DEBUG"
@@ -128,7 +126,6 @@ try
     $packageEnsuranceResult = Invoke-IpmHubPackageEnsurance `
         -Packages $newPackages `
         -PackageCreationApi $logicAppUrl `
-        -OrganizationName $ipmOrganization `
         -LocalRun $LocalRun
 
     # Report on package creation results
