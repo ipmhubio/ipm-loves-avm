@@ -70,7 +70,7 @@ jobs:
             TableNameReleaseNotes = "AvmPackageReleaseNotes"
             UseAzurite = $false
           }
-          pwsh -File ./scripts/terraform/Test-AvmTerraformPackages.ps1 @params
+          & ./scripts/terraform/Test-AvmTerraformPackages.ps1 @params
         shell: pwsh
       - name: Upload tested staging directory as artifact
         uses: actions/upload-artifact@v4
