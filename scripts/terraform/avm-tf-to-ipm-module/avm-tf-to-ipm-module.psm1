@@ -25,7 +25,7 @@ Write-Verbose 'Import PowerShell subscripts'
 $functionsToExport = @()
 
 # Dot source the files.
-ForEach ($Folder in @('Private', 'Public'))
+ForEach ($Folder in @('Private', 'public'))
 {
   $Root = Join-Path -Path $PSScriptRoot -ChildPath $Folder
 
