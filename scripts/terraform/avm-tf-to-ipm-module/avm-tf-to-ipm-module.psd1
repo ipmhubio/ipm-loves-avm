@@ -51,12 +51,7 @@
   # ProcessorArchitecture = ''
 
   # Modules that must be imported into the global environment prior to importing this module
-  RequiredModules      = @(
-    @{
-      ModuleName    = 'Az.Storage'
-      ModuleVersion = '5.0.0'
-    }
-  )
+  RequiredModules      = @()
 
   # Assemblies that must be loaded prior to importing this module
   # RequiredAssemblies = @()
