@@ -62,15 +62,40 @@ param (
     [bool]$localrun = $false
 )
 
-# Import required modules and types
-Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-to-ipm-module/avm-tf-to-ipm-module.psm1") -Force
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
+Write-Host "Importing module from: $modulePath"
+if (Test-Path $modulePath)
+{
+    Import-Module $modulePath -Force -Verbose
+}
+else
+{
+    throw "Module path not found: $modulePath"
+}
+
+# Verify module is loaded and functions are available
+$module = Get-Module -Name "avm-tf-to-ipm-module" -ErrorAction Stop
+if (-not $module)
+{
+    throw "Failed to load avm-tf-to-ipm-module module"
+}
+
+Write-Host "Module loaded successfully. Available functions:"
+$functions = $module.ExportedFunctions.Keys
+$functions | ForEach-Object { Write-Host "- $_" }
+
+# Verify Write-Log function is available
+if (-not (Get-Command -Name "Write-Log" -ErrorAction SilentlyContinue))
+{
+    throw "Write-Log function is not available. Check module export settings."
+}
 
 # Install and import required Azure Table Storage module
 if (-not (Get-Module -ListAvailable -Name AzTable))
 {
     Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
 }
-Import-Module AzTable
+
 
 #region Main Execution
 $ErrorActionPreference = "Stop"

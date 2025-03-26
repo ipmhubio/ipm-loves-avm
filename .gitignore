@@ -3,3 +3,4 @@ scripts/terraform/staging/*
 __azurite_db_table__.json
 scripts/terraform/logs/ipm-process.log
 __azurite_db_table__.json
+logs/ipm-process.log
