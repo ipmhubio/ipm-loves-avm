@@ -62,7 +62,7 @@ param (
     [bool]$localrun = $false
 )
 
-$modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-to-ipm-module/avm-tf-to-ipm-module.psm1"
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
 Write-Host "Importing module from: $modulePath"
 if (Test-Path $modulePath)
 {
