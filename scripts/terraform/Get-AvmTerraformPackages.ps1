@@ -66,7 +66,9 @@ param (
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-to-ipm-module/avm-tf-to-ipm-module.psm1") -Force
 # Check if the module is available
 Get-Module -Name "avm-tf-to-ipm-module" -ErrorAction SilentlyContinue
-
+#list all functuins in the module
+$module = Get-Module -Name "avm-tf-to-ipm-module"
+$module.Functions | ForEach-Object { $_.Name }
 # Install and import required Azure Table Storage module
 if (-not (Get-Module -ListAvailable -Name AzTable))
 {
