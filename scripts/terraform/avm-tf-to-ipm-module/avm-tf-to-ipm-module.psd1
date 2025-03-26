@@ -51,7 +51,12 @@
   # ProcessorArchitecture = ''
 
   # Modules that must be imported into the global environment prior to importing this module
-  RequiredModules      = @()
+  RequiredModules      = @(
+    @{
+      ModuleName    = 'Az.Storage'
+      ModuleVersion = '5.0.0'
+    }
+  )
 
   # Assemblies that must be loaded prior to importing this module
   # RequiredAssemblies = @()
@@ -69,30 +74,18 @@
 
   # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
   FunctionsToExport    = @(
-    'Convert-PackageName',
-    'Get-AvmTerraformModule',
-    'Get-AzureAvmReleases',
-    'Get-NewReleases',
-    'Get-PackageVersionState',
-    'Get-PublishedPackages',
-    'Get-TableEntities',
-    'Get-ReleaseArchive',
     'Initialize-AzureStorageTable',
-    'Initialize-Environment',
-    'Invoke-AvmRelease',
-    'Invoke-IpmHubPackageEnsurance',
-    'New-IpmPackageName',
-    'Publish-ToIpm',
-    'Send-TeamsNotification',
-    'Test-TerraformModule',
-    'Update-ModuleDocumentation',
     'Update-PackageVersionState',
-    'Update-ReleaseNotes',
-    'Update-TelemetryDefault',
-    'Update-TelemetryDefaultInMarkdown',
+    'Get-PackageVersionState',
+    'Get-NewReleases',
+    'Get-AvmTerraformModule',
+    'Invoke-AvmRelease',
+    'Update-ModuleDocumentation',
+    'Test-TerraformModule',
+    'Send-TeamsNotification',
+    'Publish-ToIpm',
     'Write-Log',
-    'Get-ValidPackageName',
-    'Add-DisclaimerFile'
+    'Update-ReleaseNotes'
   )
 
   # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

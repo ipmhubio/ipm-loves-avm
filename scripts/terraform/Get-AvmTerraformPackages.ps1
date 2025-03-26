@@ -62,24 +62,8 @@ param (
     [bool]$localrun = $false
 )
 
-# Get the module path
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
-
-# Check if the module file exists
-if (-not (Test-Path -Path $modulePath)) {
-    Write-Host "Module not found at expected path: $modulePath"
-
-    # Try alternative locations
-    $alternativePath = Join-Path -Path $PSScriptRoot -ChildPath "./avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
-
-    if (Test-Path -Path $alternativePath) {
-        Write-Host "Module found in alternative location"
-        $modulePath = $alternativePath
-    } else {
-        throw "Cannot find module file at $modulePath or $alternativePath"
-    }
-}
-Write-Host "Importing avm module from: $modulePath"
+Write-Host "Importing module from: $modulePath"
 if (Test-Path $modulePath)
 {
     Import-Module $modulePath -Force -Verbose
@@ -111,7 +95,7 @@ if (-not (Get-Module -ListAvailable -Name AzTable))
 {
     Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
 }
-Import-Module -Name AzTable -Force
+
 
 #region Main Execution
 $ErrorActionPreference = "Stop"
