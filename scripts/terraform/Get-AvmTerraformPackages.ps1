@@ -79,7 +79,7 @@ if (-not (Test-Path -Path $modulePath)) {
         throw "Cannot find module file at $modulePath or $alternativePath"
     }
 }
-Write-Host "Importing module from: $modulePath"
+Write-Host "Importing avm module from: $modulePath"
 if (Test-Path $modulePath)
 {
     Import-Module $modulePath -Force -Verbose
