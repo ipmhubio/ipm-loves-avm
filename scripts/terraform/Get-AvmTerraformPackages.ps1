@@ -111,7 +111,7 @@ if (-not (Get-Module -ListAvailable -Name AzTable))
 {
     Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
 }
-
+Import-Module -Name AzTable -Force
 
 #region Main Execution
 $ErrorActionPreference = "Stop"
