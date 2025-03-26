@@ -70,6 +70,7 @@ jobs:
             TableNameReleaseNotes = "AvmPackageReleaseNotes"
             UseAzurite = $false
           }
+          import-module ./scripts/terraform/avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
           & ./scripts/terraform/Test-AvmTerraformPackages.ps1 @params
         shell: pwsh
       - name: Upload tested staging directory as artifact
