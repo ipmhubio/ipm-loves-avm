@@ -1,4 +1,4 @@
-using namespace Microsoft.Azure.Cosmos.Table
+#using namespace Microsoft.Azure.Cosmos.Table
 
 <#
 .SYNOPSIS
