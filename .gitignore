@@ -1,0 +1,5 @@
+scripts/terraform/staging/*
+!scripts/terraform/staging/.gitkeep
+__azurite_db_table__.json
+scripts/terraform/logs/ipm-process.log
+__azurite_db_table__.json
