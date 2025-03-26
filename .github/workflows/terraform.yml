@@ -13,6 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Required PowerShell Modules
+        run: |
+          # Install the Azure modules needed for table storage
+          Write-Host "Installing required PowerShell modules..."
+          Install-Module -Name Az.Storage -Force -AllowClobber -Scope CurrentUser -SkipPublisherCheck
+          Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser -SkipPublisherCheck
+
+          # Install the specific NuGet package for Azure Cosmos Table operations
+          Write-Host "Installing Microsoft.Azure.Cosmos.Table NuGet package..."
+          Install-Package Microsoft.Azure.Cosmos.Table -Force -Scope CurrentUser | Out-Null
+
+          # Load the assembly explicitly
+          Write-Host "Loading assembly..."
+          $assembly = [System.Reflection.Assembly]::LoadFrom((Get-Package Microsoft.Azure.Cosmos.Table).Source)
+          Write-Host "Assembly loaded: $($assembly.FullName)"
+        shell: pwsh
+
       - name: Run Download Script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
