@@ -34,7 +34,7 @@ jobs:
             UseAzurite = $false
           }
           pwsh -File ./scripts/terraform/Get-AvmTerraformPackages.ps1 @params
-
+        shell: pwsh
       - name: Upload staging directory as artifact
         uses: actions/upload-artifact@v3
         with:
@@ -80,7 +80,7 @@ jobs:
             UseAzurite = $false
           }
           pwsh -File ./scripts/terraform/Test-AvmTerraformPackages.ps1 @params
-
+        shell: pwsh
       - name: Upload tested staging directory as artifact
         uses: actions/upload-artifact@v3
         with:
@@ -132,3 +132,4 @@ jobs:
             UseAzurite = $false
           }
           pwsh -File ./scripts/terraform/Publish-AvmTerraformPackages.ps1 @params
+        shell: pwsh
