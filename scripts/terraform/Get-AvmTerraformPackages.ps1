@@ -1,4 +1,4 @@
-#using namespace Microsoft.Azure.Cosmos.Table
+using namespace Microsoft.Azure.Cosmos.Table
 
 <#
 .SYNOPSIS
@@ -50,7 +50,7 @@ param (
     [string]$StagingDirectory = "staging",
 
     [Parameter(Mandatory = $false)]
-    [string]$ipmOrganization = "avm-tf",
+    [string]$ipmOrganization = "avm-terraform",
 
     [Parameter(Mandatory = $false)]
     [string]$TeamsWebhookUrl,
