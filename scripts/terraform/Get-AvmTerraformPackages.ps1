@@ -66,16 +66,20 @@ param (
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
 
 # Check if the module file exists
-if (-not (Test-Path -Path $modulePath)) {
+if (-not (Test-Path -Path $modulePath))
+{
     Write-Host "Module not found at expected path: $modulePath"
 
     # Try alternative locations
     $alternativePath = Join-Path -Path $PSScriptRoot -ChildPath "./avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
 
-    if (Test-Path -Path $alternativePath) {
+    if (Test-Path -Path $alternativePath)
+    {
         Write-Host "Module found in alternative location"
         $modulePath = $alternativePath
-    } else {
+    }
+    else
+    {
         throw "Cannot find module file at $modulePath or $alternativePath"
     }
 }
@@ -117,17 +121,36 @@ $failedPackages = @()
 try
 {
     # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
+    if ($UseAzurite)
+    {
+        $table = Initialize-AzureStorageTable `
+            -StorageAccountName $StorageAccountName `
+            -StorageAccountKey $StorageAccountKey `
+            -TableName $TableName `
+            -UseAzurite $UseAzurite
 
-    $releaseNotesTable = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableNameReleaseNotes `
-        -UseAzurite $UseAzurite
+        $releaseNotesTable = Initialize-AzureStorageTable `
+            -StorageAccountName $StorageAccountName `
+            -StorageAccountKey $StorageAccountKey `
+            -TableName $TableNameReleaseNotes `
+            -UseAzurite $UseAzurite
+
+    }
+    else
+    {
+        $table = Initialize-AzureStorageTable `
+            -StorageAccountName $StorageAccountName `
+            -SasToken $StorageSasToken `
+            -TableName $TableName `
+            -UseAzurite $UseAzurite
+
+        $releaseNotesTable = Initialize-AzureStorageTable `
+            -StorageAccountName $StorageAccountName `
+            -SasToken $StorageSasToken `
+            -TableName $TableNameReleaseNotes `
+            -UseAzurite $UseAzurite
+    }
+
 
     # Initialize environment
     Initialize-Environment -StagingDirectory $StagingDirectory
@@ -144,7 +167,7 @@ try
     $page = 1
 
     do
-    {
+    {C
         $pageUrl = "$searchUrl&page=$page"
         Write-Log "Searching for AVM repositories (page $page)..." -Level "INFO"
         $repos = Invoke-RestMethod -Uri $pageUrl -Headers $headers -Method Get
