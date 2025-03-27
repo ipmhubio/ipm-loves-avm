@@ -31,10 +31,14 @@ function Initialize-AzureStorageTable
             Install-Module -Name Az.Storage -Force -AllowClobber -Scope CurrentUser
             Install-Module -Name Az.Accounts -Force -AllowClobber -Scope CurrentUser
             Install-Module -Name Az.Resources -Force -AllowClobber -Scope CurrentUser
-
             Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
         }
 
+        # Import modules in correct order to satisfy dependencies
+        Import-Module -Name Az.Storage -Force
+        Import-Module -Name Az.Accounts -Force
+        Import-Module -Name Az.Resources -Force
+        Import-Module -Name AzTable -Force
         if ($UseAzurite)
         {
             Write-Log "Using Azurite local storage emulator..." -Level "INFO"
