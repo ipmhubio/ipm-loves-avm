@@ -1,5 +1,4 @@
 # Import required modules
-using namespace Microsoft.Azure.Cosmos.Table
 
 function Initialize-AzureStorageTable
 {
@@ -56,8 +55,8 @@ function Initialize-AzureStorageTable
             Write-Log "Using account key authentication for storage account: $StorageAccountName" -Level "INFO"
         }
 
-        # Create CloudTable directly
-        $storageAccount = [CloudStorageAccount]::Parse($connectionString)
+        # Create CloudTable directly - using fully qualified type names for all Azure Storage classes
+        $storageAccount = [Microsoft.Azure.Cosmos.Table.CloudStorageAccount]::Parse($connectionString)
         $client = New-Object Microsoft.Azure.Cosmos.Table.CloudTableClient([Uri]$storageAccount.TableEndpoint, $storageAccount.Credentials)
         [Microsoft.Azure.Cosmos.Table.CloudTable]$table = $client.GetTableReference($TableName)
         $null = $table.CreateIfNotExists()

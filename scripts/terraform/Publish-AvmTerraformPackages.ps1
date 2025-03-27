@@ -1,4 +1,5 @@
-using namespace Microsoft.Azure.Cosmos.Table
+# Remove the namespace directive as it's not needed for PowerShell modules
+# Original first line was: using namespace AzTable
 
 <#
 .SYNOPSIS
