@@ -19,9 +19,9 @@ jobs:
           SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
+          Install-module Az -Force -AllowClobber -Scope CurrentUser
           Install-Module Az.Storage -Force -AllowClobber -Scope CurrentUser
           Install-Module Az.Resources -Force -AllowClobber -Scope CurrentUser
-     
 
           $params = @{
             GithubToken = $env:GITHUB_TOKEN
