@@ -19,8 +19,8 @@ jobs:
           SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
-          Install-Module -Name Az.Storage -force
-          Install-Module -Name AzTable -force
+          Install-Module -Name Az.Storage -Force -AllowClobber -Scope CurrentUser
+          Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
           $params = @{
             GithubToken = $env:GITHUB_TOKEN
             StagingDirectory = "staging"
