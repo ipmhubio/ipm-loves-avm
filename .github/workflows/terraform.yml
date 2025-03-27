@@ -21,7 +21,7 @@ jobs:
         run: |
           Install-Module Az.Storage -Force -AllowClobber -Scope CurrentUser
           Install-Module Az.Resources -Force -AllowClobber -Scope CurrentUser
-          Update-Module Az -Force -Scope CurrentUser
+     
 
           $params = @{
             GithubToken = $env:GITHUB_TOKEN
