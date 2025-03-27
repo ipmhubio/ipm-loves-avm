@@ -28,9 +28,12 @@ function Initialize-AzureStorageTable
         if (-not (Get-Module -ListAvailable -Name AzTable))
         {
             Write-Log "Installing AzTable module..." -Level "INFO"
+            Install-Module -Name Az.Storage -Force -AllowClobber -Scope CurrentUser
+            Install-Module -Name Az.Accounts -Force -AllowClobber -Scope CurrentUser
+            Install-Module -Name Az.Resources -Force -AllowClobber -Scope CurrentUser
+
             Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
         }
-        Import-Module AzTable
 
         if ($UseAzurite)
         {
