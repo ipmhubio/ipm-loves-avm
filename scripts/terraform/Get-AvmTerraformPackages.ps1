@@ -16,12 +16,8 @@
     Azure Storage Table Name for release notes.
 .PARAMETER StagingDirectory
     Directory where packages will be downloaded and processed.
-.PARAMETER ipmOrganization
-    IPM organization name.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
-.PARAMETER UseAzurite
-    Boolean flag to indicate if Azurite should be used for local development.
 #>
 
 [CmdletBinding()]
@@ -48,13 +44,7 @@ param (
     [string]$StagingDirectory = "staging",
 
     [Parameter(Mandatory = $false)]
-    [string]$ipmOrganization = "avm-tf",
-
-    [Parameter(Mandatory = $false)]
     [string]$TeamsWebhookUrl,
-
-    [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true,
 
     [Parameter(Mandatory = $false)]
     [bool]$localrun = $false
@@ -166,7 +156,7 @@ try
 
             # Check if this version is already processed
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
-            $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version
+            $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version -LocalRun $localrun
             Write-Log "Current state $existingState" -Level "DEBUG"
 
             # Skip processing if already processed
@@ -177,7 +167,7 @@ try
             }
 
             # Update state to Downloading
-            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at
+            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
 
             # Update release notes before processing
             write-log "Updating release notes for $repoName version $version" -Level "INFO"
@@ -186,7 +176,8 @@ try
                 -PackageName $repoName `
                 -Version $version `
                 -ReleaseNotes $release.body `
-                -CreatedAt $release.created_at
+                -CreatedAt $release.created_at `
+                -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
 
             # Download and extract the package
             $moduleResult = Get-AvmTerraformModule -PackageName $repoName -Version $version -TarballUrl $release.tarball_url `
@@ -200,13 +191,13 @@ try
                 Copy-ExtractedToIpmBuild -ExtractedPath $extractedPath -VersionFolderPath $versionFolderPath
 
                 # Update state to Downloaded
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloaded"
+                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloaded" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
                 $downloadedCount++
             }
             else
             {
                 Write-Log "Failed to download $repoName version $version : $($moduleResult.Message)" -Level "ERROR"
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message
+                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
                 $failedCount++
                 $failedPackages += "$repoName v$version"
             }

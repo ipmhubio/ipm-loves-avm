@@ -15,8 +15,6 @@
     Directory where packages are downloaded and processed.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
-.PARAMETER UseAzurite
-    Boolean flag to indicate if Azurite should be used for local development.
 .PARAMETER SkipTests
     Boolean flag to skip actual terraform testing (for development purposes).
 #>
@@ -46,10 +44,10 @@ param (
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true,
+    [bool]$SkipTests = $false,
 
     [Parameter(Mandatory = $false)]
-    [bool]$SkipTests = $false
+    [switch]$localrun = $false
 )
 
 # Import required modules and types
@@ -128,7 +126,7 @@ try
     Write-Log "Found $($packagesToTest.Count) packages to test" -Level "INFO"
 
     # Get all packages with 'Downloaded' status from the table
-    $downloadedPackages = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
+    $downloadedPackages = Get-TableEntities -Table $table -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
     Write-Log "Found $($downloadedPackages.Count) packages with 'Downloaded' status in the table" -Level "INFO"
     WRITE-LOG "Downloaded packages: $($downloadedPackages | ConvertTo-Json -Depth 10)" -Level "DEBUG"
     foreach ($package in $packagesToTest)
@@ -151,13 +149,13 @@ try
         Write-Log "Testing package: $packageName version: $version" -Level "INFO"
 
         # Update state to Testing
-        Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Testing"
+        Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Testing" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
 
         # Package path is directly from our directory scan
         if (-not (Test-Path $packagePath))
         {
             Write-Log "Package path does not exist: $packagePath" -Level "ERROR"
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found"
+            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             continue
@@ -177,7 +175,7 @@ try
 
         # Update documentation
         Write-Log "Updating documentation for $packageName v$version..." -Level "INFO"
-        $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $packagePath -Table $releaseNotesTable -PackageName $packageName -Version $version
+        $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $packagePath -Table $releaseNotesTable -PackageName $packageName -Version $version -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
 
         if (-not $docUpdateSuccess)
         {

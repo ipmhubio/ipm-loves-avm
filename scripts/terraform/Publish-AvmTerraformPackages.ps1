@@ -20,8 +20,6 @@
     IPM organization name.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
-.PARAMETER UseAzurite
-    Boolean flag to indicate if Azurite should be used for local development.
 #>
 
 [CmdletBinding()]
@@ -52,9 +50,6 @@ param (
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true,
-
-    [Parameter(Mandatory = $false)]
     [bool]$LocalRun = $false
 )
 
@@ -78,7 +73,7 @@ try
     }
 
     # Get all packages that are in Tested state from the table
-    $packagesToPublish = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Tested" }
+    $packagesToPublish = Get-TableEntities -Table $table -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" | Where-Object { $_.Status -eq "Tested" }
 
     Write-Log "Found $($packagesToPublish.Count) packages to publish" -Level "INFO"
 
@@ -168,7 +163,7 @@ try
         if (-not (Test-Path $packagePath))
         {
             Write-Log "Package path does not exist: $packagePath" -Level "ERROR"
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found"
+            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             continue
@@ -189,14 +184,14 @@ try
         if ($publishResult.Success -eq $true)
         {
             # Update state to Published
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Published-tested" -ErrorMessage $null
+            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Published-tested" -ErrorMessage $null -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
             $publishedCount++
             Write-Log "Successfully published $packageName v$version" -Level "SUCCESS"
         }
         else
         {
             # Update state to Failed
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Failed to publish: $($publishResult.Message)"
+            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Failed to publish: $($publishResult.Message)" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             Write-Log "Failed to publish $packageName v$version : $($publishResult.Message)" -Level "ERROR"
