@@ -2,71 +2,98 @@ function Get-TableEntities
 {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table,
+        [Parameter(Mandatory = $true, ParameterSetName = "SecureSasToken")]
+        [ValidateNotNull()]
+        [SecureString] $SecureSasToken,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "SasTokenFromEnvVariable")]
+        [String] $SasTokenFromEnvironmentVariable,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "UnsecureSasToken")]
+        [ValidateNotNullOrEmpty()]
+        [String] $SasToken,
 
         [Parameter(Mandatory = $false)]
-        [string]$Filter
+        [ValidateNotNullOrEmpty()]
+        [String] $StateAccount = "ipmhubsponstor01weust",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateTableName = "AvmPackageVersions",
+
+        [Parameter(Mandatory = $false)]
+        [string]$Filter,
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $RunLocal = $false
     )
 
     try
     {
         Write-Log "Starting Get-TableEntities" -Level "INFO"
-        Write-Log "Using table: $($Table.Name) in storage account: $($Table.ServiceClient.Credentials.AccountName)" -Level "DEBUG"
 
-        # Create query
-        $query = [Microsoft.Azure.Cosmos.Table.TableQuery]::new()
+        if ($RunLocal)
+        {
+            $StateTableName = "{0}{1}" -f "TEST", $StateTableName
+            Write-Log "Running locally, using test table: $StateTableName" -Level "DEBUG"
+        }
+
+        # Parse SAS token from the appropriate parameter
+        If ($PSCmdlet.ParameterSetName -eq "SasTokenFromEnvVariable")
+        {
+            $SasToken = [System.Environment]::GetEnvironmentVariable($SasTokenFromEnvironmentVariable)
+        }
+        ElseIf ($PSCmdlet.ParameterSetName -eq "SecureSasToken")
+        {
+            $BSTR = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureSasToken)
+            $SasToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        }
+
+        # Ensure SAS token has proper format
+        If (-not $SasToken.StartsWith("?"))
+        {
+            $SasToken = "?{0}" -f $SasToken
+        }
+
+        $BaseUri = "https://{0}.table.core.windows.net/" -f $StateAccount
+        Write-Log "Using table: $StateTableName in storage account: $StateAccount" -Level "DEBUG"
+
+        # Set common headers for all requests
+        $Headers = @{
+            "x-ms-date" = [DateTime]::UtcNow.ToString("R")
+            "Accept" = "application/json;odata=nometadata"
+        }
+
+        # Build query URI
+        $QueryUri = "{0}{1}{2}" -f $BaseUri, $StateTableName, $SasToken
 
         # Apply filter if provided
         if (-not [string]::IsNullOrEmpty($Filter)) {
-            $query.FilterString = $Filter
+            $encodedFilter = [System.Web.HttpUtility]::UrlEncode($Filter)
+            $QueryUri = "{0}&`$filter={1}" -f $QueryUri, $encodedFilter
             Write-Log "Executing query with filter: $Filter" -Level "DEBUG"
         } else {
             Write-Log "Executing query without filter to get all entries" -Level "DEBUG"
         }
 
         # Execute query
-        $results = $Table.ExecuteQuery($query)
+        $response = Invoke-RestMethod -Uri $QueryUri -Method "Get" -Headers $Headers
+        $results = $response.value
         $resultsCount = ($results | Measure-Object).Count
         Write-Log "Query returned $resultsCount entries" -Level "DEBUG"
 
-        # Convert table entities to PSCustomObjects
-        $entities = @()
-        foreach ($result in $results)
-        {
-            $entity = [PSCustomObject]@{
-                PartitionKey = $result.PartitionKey
-                RowKey = $result.RowKey
-                ETag = $result.ETag
-                Timestamp = $result.Timestamp
+        # Results from REST API are already in proper format with properties as direct members
+        # Just pass through since they're already deserialized as PSCustomObjects
+
+        # Include odata.etag as ETag property if needed for consistency
+        $entities = $results | ForEach-Object {
+            if ($_.'odata.etag') {
+                $_ | Add-Member -MemberType NoteProperty -Name 'ETag' -Value $_.'odata.etag' -Force
             }
-
-            # Add all properties from the entity
-            foreach ($prop in $result.Properties.Keys)
-            {
-                $propValue = $null
-
-                # Extract the right value based on property type
-                switch ($result.Properties[$prop].PropertyType)
-                {
-                    "String" { $propValue = $result.Properties[$prop].StringValue }
-                    "DateTime" { $propValue = $result.Properties[$prop].DateTime }
-                    "Int32" { $propValue = $result.Properties[$prop].Int32Value }
-                    "Int64" { $propValue = $result.Properties[$prop].Int64Value }
-                    "Boolean" { $propValue = $result.Properties[$prop].BooleanValue }
-                    "Double" { $propValue = $result.Properties[$prop].DoubleValue }
-                    "Guid" { $propValue = $result.Properties[$prop].GuidValue }
-                    "Binary" { $propValue = $result.Properties[$prop].BinaryValue }
-                    default { $propValue = $result.Properties[$prop].PropertyAsObject }
-                }
-
-                Add-Member -InputObject $entity -MemberType NoteProperty -Name $prop -Value $propValue -Force
-            }
-
-            $entities += $entity
+            $_
         }
 
-        Write-Log "Successfully converted $resultsCount table entities to PSCustomObjects" -Level "INFO"
+        Write-Log "Successfully processed $resultsCount table entities" -Level "INFO"
         return $entities
     }
     catch

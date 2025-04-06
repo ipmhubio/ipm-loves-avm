@@ -256,28 +256,81 @@ function Get-PublishedPackages
 {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table
+        [Parameter(Mandatory = $true, ParameterSetName = "SecureSasToken")]
+        [ValidateNotNull()]
+        [SecureString] $SecureSasToken,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "SasTokenFromEnvVariable")]
+        [String] $SasTokenFromEnvironmentVariable,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "UnsecureSasToken")]
+        [ValidateNotNullOrEmpty()]
+        [String] $SasToken,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateAccount = "ipmhubsponstor01weust",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateTableName = "AvmPackageVersions",
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $RunLocal = $false
     )
-
-    Write-Log "Starting Get-PublishedPackages" -Level "INFO"
-    Write-Log "Using table: $($Table.Name) in storage account: $($Table.ServiceClient.Credentials.AccountName)" -Level "DEBUG"
-
-    # Query for all entries with Status = 'Published'
-    $filter = "Status eq 'Published'"
-    $query = [Microsoft.Azure.Cosmos.Table.TableQuery]::new()
-    $query.FilterString = $filter
 
     try
     {
-        $results = $Table.ExecuteQuery($query)
+        Write-Log "Starting Get-PublishedPackages" -Level "INFO"
+
+        if ($RunLocal)
+        {
+            $StateTableName = "{0}{1}" -f "TEST", $StateTableName
+            Write-Log "Running locally, using test table: $StateTableName" -Level "DEBUG"
+        }
+
+        # Parse SAS token from the appropriate parameter
+        If ($PSCmdlet.ParameterSetName -eq "SasTokenFromEnvVariable")
+        {
+            $SasToken = [System.Environment]::GetEnvironmentVariable($SasTokenFromEnvironmentVariable)
+        }
+        ElseIf ($PSCmdlet.ParameterSetName -eq "SecureSasToken")
+        {
+            $BSTR = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureSasToken)
+            $SasToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        }
+
+        # Ensure SAS token has proper format
+        If (-not $SasToken.StartsWith("?"))
+        {
+            $SasToken = "?{0}" -f $SasToken
+        }
+
+        $BaseUri = "https://{0}.table.core.windows.net/" -f $StateAccount
+        Write-Log "Using table: $StateTableName in storage account: $StateAccount" -Level "DEBUG"
+
+        # Create query to get all published entities
+        $filter = "Status eq 'Published' or Status eq 'Published-tested'"
+        $encodedFilter = [System.Web.HttpUtility]::UrlEncode($filter)
+        $QueryUri = "{0}{1}{2}&`$filter={3}" -f $BaseUri, $StateTableName, $SasToken, $encodedFilter
+
+        $Headers = @{
+            "x-ms-date" = [DateTime]::UtcNow.ToString("R")
+            "Accept" = "application/json;odata=nometadata"
+        }
+
+        Write-Log "Querying for published entries with filter: $filter" -Level "DEBUG"
+
+        # Execute query
+        $response = Invoke-RestMethod -Uri $QueryUri -Method "Get" -Headers $Headers
+        $results = $response.value
         $resultsCount = ($results | Measure-Object).Count
         Write-Log "Query returned $resultsCount published entries" -Level "DEBUG"
 
         # Extract distinct package names (PartitionKeys)
         $publishedPackages = $results |
             Select-Object -ExpandProperty PartitionKey -Unique |
-                Sort-Object
+            Sort-Object
 
         Write-Log "Found $($publishedPackages.Count) unique packages with published versions" -Level "INFO"
         return $publishedPackages
@@ -294,4 +347,3 @@ function Get-PublishedPackages
         return @()
     }
 }
-

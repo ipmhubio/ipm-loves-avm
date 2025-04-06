@@ -1,4 +1,4 @@
-using namespace Microsoft.Azure.Cosmos.Table
+
 
 <#
 .SYNOPSIS
@@ -76,14 +76,6 @@ $failedPackages = @()
 
 try
 {
-    # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
-
-
     # Verify staging directory exists
     if (-not (Test-Path $StagingDirectory))
     {

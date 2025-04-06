@@ -1,5 +1,3 @@
-using namespace Microsoft.Azure.Cosmos.Table
-
 <#
 .SYNOPSIS
     Discovers and downloads Azure Verified Modules (AVM) Terraform packages.
@@ -121,18 +119,6 @@ $failedPackages = @()
 
 try
 {
-    # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
-
-    $releaseNotesTable = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableNameReleaseNotes `
-        -UseAzurite $UseAzurite
 
     # Initialize environment
     Initialize-Environment -StagingDirectory $StagingDirectory

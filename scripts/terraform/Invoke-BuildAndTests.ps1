@@ -1,4 +1,3 @@
-using namespace Microsoft.Azure.Cosmos.Table
 
 <#
 .SYNOPSIS
@@ -61,12 +60,6 @@ param (
 # Import required modules and types
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1") -Force
 
-# Install and import required Azure Table Storage module
-if (-not (Get-Module -ListAvailable -Name AzTable))
-{
-    Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
-}
-Import-Module AzTable
 
 #region Main Execution
 $ErrorActionPreference = "Stop"
@@ -76,19 +69,6 @@ $failedPackages = @()
 
 try
 {
-    # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
-
-    $releaseNotesTable = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -StorageAccountKey $StorageAccountKey `
-        -TableName $TableNameReleaseNotes `
-        -UseAzurite $UseAzurite
-
     # Initialize environment
     Initialize-Environment -StagingDirectory $StagingDirectory
 

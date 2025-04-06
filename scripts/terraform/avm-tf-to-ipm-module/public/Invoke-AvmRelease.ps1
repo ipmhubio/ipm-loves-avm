@@ -60,7 +60,6 @@ function Invoke-AvmRelease
         [string]$GithubToken,
         [switch]$Force = $false,
         [switch]$LocalRun = $false,
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table,
         [bool]$skipTests = $false
     )
 
