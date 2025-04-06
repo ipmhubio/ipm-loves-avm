@@ -104,14 +104,6 @@ if (-not (Get-Command -Name "Write-Log" -ErrorAction SilentlyContinue))
     throw "Write-Log function is not available. Check module export settings."
 }
 
-# Install and import required Azure Table Storage module
-if (-not (Get-Module -ListAvailable -Name AzTable))
-{
-    Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
-}
-Import-Module -Name AzTable -Force
-
-#region Main Execution
 $ErrorActionPreference = "Stop"
 $downloadedCount = 0
 $failedCount = 0
