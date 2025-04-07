@@ -114,7 +114,7 @@ jobs:
 
       - name: Run Publish Script
         env:
-          IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS-TF-AVM }}
+          IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS_TF_AVM }}
           SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
           PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
