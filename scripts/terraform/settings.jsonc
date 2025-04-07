@@ -59,6 +59,10 @@
     {
       "search": "oracledatabase-cloudexadatainfrastructure",
       "replacement": "oracle-db-exadata-infra"
+    },
+    {
+      "search": "maintenance-maintenanceconfiguration",
+      "replacement": "maintenanceconfiguration"
     }
   ]
 }

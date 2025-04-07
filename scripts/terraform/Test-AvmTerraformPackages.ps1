@@ -9,8 +9,6 @@
     Azure Storage Account Name for state management.
 .PARAMETER StorageAccountKey
     Azure Storage Account Key for state management.
-.PARAMETER TableName
-    Azure Storage Table Name for state management.
 .PARAMETER StagingDirectory
     Directory where packages are downloaded and processed.
 .PARAMETER TeamsWebhookUrl
@@ -30,9 +28,6 @@ param (
 
     [Parameter(Mandatory = $false)]
     [string]$StorageSasToken,
-
-    [Parameter(Mandatory = $false)]
-    [string]$TableName = "AvmPackageVersions",
 
     [Parameter(Mandatory = $false)]
     [string]$TableNameReleaseNotes = "AvmPackageReleaseNotes",
@@ -126,7 +121,7 @@ try
     Write-Log "Found $($packagesToTest.Count) packages to test" -Level "INFO"
 
     # Get all packages with 'Downloaded' status from the table
-    $downloadedPackages = Get-TableEntities -Table $table -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF" | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
+    $downloadedPackages = Get-TableEntities -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF" | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
     Write-Log "Found $($downloadedPackages.Count) packages with 'Downloaded' status in the table" -Level "INFO"
     WRITE-LOG "Downloaded packages: $($downloadedPackages | ConvertTo-Json -Depth 10)" -Level "DEBUG"
     foreach ($package in $packagesToTest)
@@ -149,13 +144,13 @@ try
         Write-Log "Testing package: $packageName version: $version" -Level "INFO"
 
         # Update state to Testing
-        Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Testing" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+        Update-PackageVersionState -PackageName $packageName -Version $version -Status "Testing" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
         # Package path is directly from our directory scan
         if (-not (Test-Path $packagePath))
         {
             Write-Log "Package path does not exist: $packagePath" -Level "ERROR"
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             continue
@@ -175,7 +170,7 @@ try
 
         # Update documentation
         Write-Log "Updating documentation for $packageName v$version..." -Level "INFO"
-        $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $packagePath -Table $releaseNotesTable -PackageName $packageName -Version $version -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+        $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $packagePath  -PackageName $packageName -Version $version -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
         if (-not $docUpdateSuccess)
         {
@@ -213,14 +208,14 @@ try
         if ($testSuccess)
         {
             # Update state to Tested
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Tested"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Tested" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $testedCount++
             Write-Log "Successfully tested $packageName v$version" -Level "SUCCESS"
         }
         else
         {
             # Update state to Failed
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Terraform validation failed"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Terraform validation failed" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             Write-Log "Failed testing $packageName v$version" -Level "ERROR"

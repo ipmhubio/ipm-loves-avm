@@ -14,6 +14,9 @@ function Update-PackageVersionState
         [Parameter(Mandatory = $false)]
         [string]$ErrorMessage,
 
+        [Parameter(Mandatory = $false)]
+        [string]$published,
+
         [Parameter(Mandatory = $True, ParameterSetName = "SecureSasToken")]
         [ValidateNotNull()]
         [SecureString] $SecureSasToken,
@@ -114,6 +117,7 @@ function Update-PackageVersionState
         }
 
         if ($PSBoundParameters.ContainsKey('published') -and $null -ne $published) {
+            Write-Log "Adding Published date: $published" -Level "DEBUG"
             $entityProperties["Published"] = $published
         }
 
@@ -158,7 +162,6 @@ function Update-PackageVersionState
         return $false
     }
 }
-
 function Get-PackageVersionState
 {
     [CmdletBinding()]

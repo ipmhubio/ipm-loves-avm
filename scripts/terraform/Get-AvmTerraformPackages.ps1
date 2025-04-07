@@ -47,7 +47,7 @@ param (
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$localrun = $false
+    [Switch]$RunLocal = $false
 )
 
 # Get the module path
@@ -156,7 +156,7 @@ try
 
             # Check if this version is already processed
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
-            $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version -LocalRun $localrun
+            $existingState = Get-PackageVersionState -PackageName $repoName -Version $version -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             Write-Log "Current state $existingState" -Level "DEBUG"
 
             # Skip processing if already processed
@@ -167,17 +167,17 @@ try
             }
 
             # Update state to Downloading
-            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+            Update-PackageVersionState -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
             # Update release notes before processing
             write-log "Updating release notes for $repoName version $version" -Level "INFO"
             Update-ReleaseNotes `
-                -table $releaseNotesTable `
                 -PackageName $repoName `
                 -Version $version `
                 -ReleaseNotes $release.body `
                 -CreatedAt $release.created_at `
-                -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+                -RunLocal:$RunLocal `
+                -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
             # Download and extract the package
             $moduleResult = Get-AvmTerraformModule -PackageName $repoName -Version $version -TarballUrl $release.tarball_url `
@@ -191,13 +191,13 @@ try
                 Copy-ExtractedToIpmBuild -ExtractedPath $extractedPath -VersionFolderPath $versionFolderPath
 
                 # Update state to Downloaded
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloaded" -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+                Update-PackageVersionState -PackageName $repoName -Version $version -Status "Downloaded" -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
                 $downloadedCount++
             }
             else
             {
                 Write-Log "Failed to download $repoName version $version : $($moduleResult.Message)" -Level "ERROR"
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message -RunLocal $LocalRun -SasTokenFromEnvVariable "SAS_TOKEN_AVM_TF"
+                Update-PackageVersionState -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
                 $failedCount++
                 $failedPackages += "$repoName v$version"
             }
