@@ -14,16 +14,6 @@ function Initialize-Environment
         Write-Log "Created staging directory: $StagingDirectory" -Level "INFO"
     }
 
-    # Install required PowerShell modules if not present
-    $requiredModules = @('Az.Storage')
-    foreach ($module in $requiredModules)
-    {
-        if (-not (Get-Module -ListAvailable -Name $module))
-        {
-            Write-Log "Installing required module: $module" -Level "INFO"
-            Install-Module -Name $module -Force -AllowClobber -Scope CurrentUser
-        }
-    }
 
     # Validate IPM client exists
     try

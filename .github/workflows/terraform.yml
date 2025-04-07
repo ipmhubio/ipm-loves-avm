@@ -12,7 +12,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      - name: Install IPM Client
+        shell: bash
+        run: |
+          wget -O - https://raw.githubusercontent.com/ipmhubio/ipm/main/ipmInstall.sh | bash
       - name: Run Download Script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
@@ -40,6 +43,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install IPM Client
+        shell: bash
+        run: |
+          wget -O - https://raw.githubusercontent.com/ipmhubio/ipm/main/ipmInstall.sh | bash
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -77,6 +85,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install IPM Client
+        shell: bash
+        run: |
+          wget -O - https://raw.githubusercontent.com/ipmhubio/ipm/main/ipmInstall.sh | bash
 
       - name: Install IPM CLI
         shell: bash
