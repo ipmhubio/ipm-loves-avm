@@ -28,6 +28,7 @@ function Test-TerraformModule {
             if (Test-Path "test") { Remove-Item -Path "tests" -Recurse -Force }
             if (Test-Path "*.log") { Remove-Item -Path "*.log" -Force }
             if (Test-Path ".terraform.lock.hcl") { Remove-Item -Path ".terraform.lock.hcl" -Force }
+            if (Test-Path "avm") { Remove-Item -Path "avm" -Recurse -Force }
             return $false
         }
 
@@ -42,6 +43,7 @@ function Test-TerraformModule {
         if (Test-Path "test") { Remove-Item -Path "tests" -Recurse -Force }
         if (Test-Path "*.log") { Remove-Item -Path "*.log" -Force }
         if (Test-Path ".terraform.lock.hcl") { Remove-Item -Path ".terraform.lock.hcl" -Force }
+        if (Test-Path "avm") { Remove-Item -Path "avm" -Recurse -Force }
 
         # fmt returns 0 if no changes were made, 1 if changes were made, and 2+ if there was an error
         if ($fmtProcess.ExitCode -gt 1) {
@@ -62,7 +64,7 @@ function Test-TerraformModule {
         if (Test-Path "test") { Remove-Item -Path "tests" -Recurse -Force }
         if (Test-Path "*.log") { Remove-Item -Path "*.log" -Force }
         if (Test-Path ".terraform.lock.hcl") { Remove-Item -Path ".terraform.lock.hcl" -Force }
-
+        if (Test-Path "avm") { Remove-Item -Path "avm" -Recurse -Force }
         Set-Location -Path $currentLocation
     }
 }

@@ -126,7 +126,6 @@ jobs:
             logicAppUrl = $env:PACKAGE_CREATION_API
             StagingDirectory = "staging"
             TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF
-            UseAzurite = $false
             StorageSasToken = $env:SAS_TOKEN_AVM_TF  # Pass directly as parameter
           }
           & ./Publish-AvmTerraformPackages.ps1 @params
