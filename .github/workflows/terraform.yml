@@ -123,6 +123,7 @@ jobs:
           cd scripts/terraform
           $params = @{
             localRun = $false
+            ipmSecret = $env:IPM_CLIENT_SECRETS
             logicAppUrl = $env:PACKAGE_CREATION_API
             StagingDirectory = "staging"
             TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF

@@ -50,7 +50,10 @@ param (
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [Switch]$LocalRun = $false
+    [Switch]$LocalRun = $false,
+
+    [Parameter(Mandatory = $false)]
+    [string]$ipmSecret = $env:IPM_CLIENT_SECRETS
 )
 
 # Import required modules and types
@@ -179,7 +182,8 @@ try
             -PackageName $packageName `
             -ipmOrganization $ipmOrganization `
             -Version $version `
-            -LocalRun $isLocalRun
+            -LocalRun $isLocalRun `
+            -ipmSecret $ipmSecret
 
         if ($publishResult.Success -eq $true)
         {
