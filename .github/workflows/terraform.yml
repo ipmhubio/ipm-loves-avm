@@ -28,6 +28,9 @@ jobs:
             GithubToken = $env:GITHUB_TOKEN
             StagingDirectory = "staging"
           }
+          Write-Host "Environment variables check:"
+          Write-Host "SAS_TOKEN_AVM_TF is set: $([string]::IsNullOrEmpty($env:SAS_TOKEN_AVM_TF) ? 'No' : 'Yes')"
+          Write-Host "SAS_TOKEN_AVM_TF length: $($env:SAS_TOKEN_AVM_TF.Length)"
           import-module ./scripts/terraform/avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
           & ./scripts/terraform/Get-AvmTerraformPackages.ps1 @params
         shell: pwsh

@@ -49,7 +49,9 @@ param (
     [Parameter(Mandatory = $false)]
     [Switch]$RunLocal = $false
 )
-
+Write-Host "Environment variables check:"
+Write-Host "SAS_TOKEN_AVM_TF is set: $([string]::IsNullOrEmpty($env:SAS_TOKEN_AVM_TF) ? 'No' : 'Yes')"
+Write-Host "SAS_TOKEN_AVM_TF length: $($env:SAS_TOKEN_AVM_TF.Length)"
 # Get the module path
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
 
