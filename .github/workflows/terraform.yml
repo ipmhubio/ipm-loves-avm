@@ -37,6 +37,18 @@ jobs:
           import-module ./avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
           & ./Get-AvmTerraformPackages.ps1 @params
         shell: pwsh
+
+      - name: Check if staging directory has content
+        id: check_changes
+        run: |
+          if [ -d "scripts/terraform/staging" ] && [ "$(ls -A scripts/terraform/staging 2>/dev/null)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes found in staging directory. Workflow will skip test and publish jobs."
+          fi
+        shell: bash
+
       - name: Upload staging directory as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -47,6 +59,7 @@ jobs:
   test:
     name: Test AVM Terraform Packages
     needs: download
+    if: needs.download.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -94,6 +107,7 @@ jobs:
   publish:
     name: Publish AVM Terraform Packages to IPM
     needs: test
+    if: needs.download.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
