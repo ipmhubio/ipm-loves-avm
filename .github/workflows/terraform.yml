@@ -21,7 +21,7 @@ jobs:
       - name: Run Download Script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
-          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
           $params = @{
@@ -66,7 +66,7 @@ jobs:
 
       - name: Run Test Script
         env:
-          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
         run: |
           $params = @{
             StagingDirectory = "staging"
@@ -114,7 +114,7 @@ jobs:
       - name: Run Test Script
         env:
           IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS-TF-AVM }}
-          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
           PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
