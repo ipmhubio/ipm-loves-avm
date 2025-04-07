@@ -3,7 +3,8 @@ function Send-TeamsNotification
     param (
         [string]$Message = "No message provided",
         [string]$Title = "AVM Package Processing Report",
-        [string]$Color = "0078D7" # Default blue
+        [string]$Color = "0078D7", # Default blue
+        [string]$TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL
     )
 
     if ([string]::IsNullOrEmpty($TeamsWebhookUrl))

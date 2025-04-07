@@ -260,7 +260,7 @@ try
             $summaryMessage += ($failedPackages | ForEach-Object { "- $_" }) -join "`n"
         }
 
-        Send-TeamsNotification -Message $summaryMessage -WebhookUrl $TeamsWebhookUrl -Title "AVM Terraform Package Processing Report" -Color $color
+        Send-TeamsNotification -Message $summaryMessage -Title "AVM Terraform Package Processing Report" -Color $color
     }
 
     Write-Log "=================================================" -Level "INFO"
