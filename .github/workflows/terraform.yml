@@ -12,10 +12,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install IPM Client
+      - name: Install IPM CLI
         shell: bash
         run: |
-          wget -O - https://raw.githubusercontent.com/ipmhubio/ipm/main/ipmInstall.sh | bash
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            tar -xzf ipm-cli.tar.gz
+            sudo mv ./ipm /usr/local/bin/ipm
       - name: Run Download Script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
@@ -44,10 +46,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install IPM Client
+      - name: Install IPM CLI
         shell: bash
         run: |
-          wget -O - https://raw.githubusercontent.com/ipmhubio/ipm/main/ipmInstall.sh | bash
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            tar -xzf ipm-cli.tar.gz
+            sudo mv ./ipm /usr/local/bin/ipm
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -86,10 +90,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install IPM Client
+      - name: Install IPM CLI
         shell: bash
         run: |
-          wget -O - https://raw.githubusercontent.com/ipmhubio/ipm/main/ipmInstall.sh | bash
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            tar -xzf ipm-cli.tar.gz
+            sudo mv ./ipm /usr/local/bin/ipm
 
       - name: Install IPM CLI
         shell: bash
