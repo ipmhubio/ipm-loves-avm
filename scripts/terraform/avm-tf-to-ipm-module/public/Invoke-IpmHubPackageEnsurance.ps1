@@ -25,16 +25,16 @@ Function Invoke-IpmHubPackageEnsurance
   {
 
     # Log the package data for troubleshooting
-    Write-Log "Package data to process: $($PackageData.Count) packages" -Level "INFO"
 
     $PackageData = [Array] ($Packages | ForEach-Object {
-        @{
-          packageName     = $_.Name
-          description     = ($_.Description ?? "")
-          descriptionLang = ($_.descriptionLang ?? "en")
-          projectUri      = ($_.projectUri ?? "https://ipmhub.io/avm-terraform")
-        }
-      }) ?? @()
+      @{
+        packageName     = $_.Name
+        description     = ($_.Description ?? "")
+        descriptionLang = ($_.descriptionLang ?? "en")
+        projectUri      = ($_.projectUri ?? "https://ipmhub.io/avm-terraform")
+      }
+    }) ?? @()
+    Write-Log "Package data to process: $($PackageData.Count) packages" -Level "INFO"
 
     if ($LocalRun)
     {
