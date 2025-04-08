@@ -110,7 +110,7 @@ try
     $packageEnsuranceResult = Invoke-IpmHubPackageEnsurance `
         -Packages $newPackages `
         -PackageCreationApi $logicAppUrl `
-        -RunLocal:$LocalRun
+        -LocalRun:$LocalRun
 
     # Report on package creation results
     if ($packageEnsuranceResult.Failed -gt 0)
