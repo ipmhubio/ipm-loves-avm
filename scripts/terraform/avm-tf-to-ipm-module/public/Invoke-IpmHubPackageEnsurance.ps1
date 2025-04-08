@@ -51,8 +51,8 @@ Function Invoke-IpmHubPackageEnsurance
           statusCode    = Get-Random -Minimum 200 -Maximum 201 # Random between 200 (exists) and 201 (created)
         }
       }
+      return $Response
     }
-    return $Response
     else
     {
       write-log "Sending package creation request to IPMHub API" -level "INFO"
