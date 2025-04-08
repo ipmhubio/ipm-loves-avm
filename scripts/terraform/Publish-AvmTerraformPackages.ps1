@@ -175,11 +175,11 @@ try
         # Check if running locally
         $isLocalRun = $LocalRun
         Write-Log "Publishing with LocalRun set to: $isLocalRun" -Level "DEBUG"
-
+        $ipmPackageName = New-IpmPackageName -TerraformName $packageName
         # Publish to IPM
         $publishResult = Publish-ToIpm `
             -PackagePath $packagePath `
-            -PackageName $packageName `
+            -PackageName $ipmPackageName `
             -ipmOrganization $ipmOrganization `
             -Version $version `
             -LocalRun $isLocalRun `
