@@ -138,7 +138,6 @@ jobs:
           # Change working directory to scripts/terraform
           cd scripts/terraform
           $params = @{
-            localRun = $false
             ipmSecret = $env:IPM_CLIENT_SECRETS
             logicAppUrl = $env:PACKAGE_CREATION_API
             StagingDirectory = "staging"

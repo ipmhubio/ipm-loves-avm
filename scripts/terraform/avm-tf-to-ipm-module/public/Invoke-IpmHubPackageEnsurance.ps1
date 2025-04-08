@@ -11,7 +11,7 @@ Function Invoke-IpmHubPackageEnsurance
     [String] $PackageCreationApi,
 
     [Parameter(Mandatory = $False)]
-    [bool]$LocalRun = $False
+    [switch]$LocalRun = $False
   )
 
   Begin
