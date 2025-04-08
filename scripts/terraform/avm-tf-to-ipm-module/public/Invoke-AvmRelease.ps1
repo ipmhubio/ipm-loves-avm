@@ -60,12 +60,10 @@ function Invoke-AvmRelease
         [string]$GithubToken,
         [switch]$Force = $false,
         [switch]$LocalRun = $false,
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$Table,
         [bool]$skipTests = $false
     )
 
     $packageName = $Package.name
-    $ipmOrganization = $Package.ipmOrganization
     $version = $Release.version
     $tarballUrl = $Release.tarball_url
 
@@ -95,7 +93,7 @@ function Invoke-AvmRelease
     # From here on, use $buildForIpmPath instead of $moduleDir for further processing
     # Update documentation
     Write-Log "Updating documentation for $packageName v$version..." -Level "INFO"
-    $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $buildForIpmPath -Table $table -PackageName $packageName -Version $version
+    $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $buildForIpmPath -PackageName $packageName -Version $version
 
     if (-not $docUpdateSuccess)
     {

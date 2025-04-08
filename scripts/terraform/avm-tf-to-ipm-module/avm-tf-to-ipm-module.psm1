@@ -69,7 +69,6 @@ Export-ModuleMember -Function @(
   'Get-PublishedPackages',
   'Get-TableEntities',
   'Get-ReleaseArchive',
-  'Initialize-AzureStorageTable',
   'Initialize-Environment',
   'Invoke-AvmRelease',
   'Invoke-IpmHubPackageEnsurance',

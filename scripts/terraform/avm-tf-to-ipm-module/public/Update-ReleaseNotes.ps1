@@ -1,8 +1,16 @@
 function Update-ReleaseNotes {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$table,
+        [Parameter(Mandatory = $true, ParameterSetName = "SecureSasToken")]
+        [ValidateNotNull()]
+        [SecureString] $SecureSasToken,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "SasTokenFromEnvVariable")]
+        [String] $SasTokenFromEnvironmentVariable,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "UnsecureSasToken")]
+        [ValidateNotNullOrEmpty()]
+        [String] $SasToken,
 
         [Parameter(Mandatory = $true)]
         [string]$PackageName,
@@ -14,52 +22,149 @@ function Update-ReleaseNotes {
         [string]$ReleaseNotes,
 
         [Parameter(Mandatory = $true)]
-        [DateTime]$CreatedAt
+        [DateTime]$CreatedAt,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateAccount = "ipmhubsponstor01weust",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateTableName = "AvmPackageReleaseNotes",
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $RunLocal = $false
     )
 
     try {
         Write-Log "Starting Update-ReleaseNotes for package '$PackageName' version '$Version'" -Level "INFO"
+
         if ([string]::IsNullOrEmpty($ReleaseNotes)) {
             Write-Log "Release notes are empty, using default message" -Level "INFO"
             $ReleaseNotes = "No release notes were published in the GitHub Release for this version."
         }
 
+        if ($RunLocal)
+        {
+            $StateTableName = "{0}{1}" -f "TEST", $StateTableName
+            Write-Log "Running locally, using test table: $StateTableName" -Level "DEBUG"
+        }
+
+        # Parse SAS token from the appropriate parameter
+        If ($PSCmdlet.ParameterSetName -eq "SasTokenFromEnvVariable")
+        {
+            $SasToken = [System.Environment]::GetEnvironmentVariable($SasTokenFromEnvironmentVariable)
+        }
+        ElseIf ($PSCmdlet.ParameterSetName -eq "SecureSasToken")
+        {
+            $BSTR = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureSasToken)
+            $SasToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        }
+
+        # Ensure SAS token has proper format
+        If (-not $SasToken.StartsWith("?"))
+        {
+            $SasToken = "?{0}" -f $SasToken
+        }
+
+        $BaseUri = "https://{0}.table.core.windows.net/" -f $StateAccount
         $partitionKey = $PackageName
-        $rowKey = $Version.Replace(".", "-")
+        $rowKey = $Version.Replace(".", "-")  # Ensure valid rowkey format
 
-        # Retrieve existing entity if it exists
-        $retrieveOperation = [Microsoft.Azure.Cosmos.Table.TableOperation]::Retrieve($partitionKey, $rowKey)
-        $existingEntity = $table.Execute($retrieveOperation).Result
+        # Build entity URI for the specific entity
+        $EntityUri = "{0}{1}(PartitionKey='{2}',RowKey='{3}')" -f $BaseUri, $StateTableName, $partitionKey, $rowKey
 
-        if ($null -eq $existingEntity) {
-            Write-Log "Creating new entity for $PackageName version $Version" -Level "DEBUG"
-            $entity = New-Object -TypeName "Microsoft.Azure.Cosmos.Table.DynamicTableEntity" -ArgumentList $partitionKey, $rowKey
-            $entity.Properties["ReleaseNotes"] = $ReleaseNotes
-            $entity.Properties["CreatedAt"] = $CreatedAt
-            $entity.Properties["Version"] = $Version
-        } else {
-            Write-Log "Updating existing entity for $PackageName version $Version" -Level "DEBUG"
-            $entity = $existingEntity
-            # Only update if values are provided
-            if ($PSBoundParameters.ContainsKey('ReleaseNotes')) {
-                $entity.Properties["ReleaseNotes"] = $ReleaseNotes
+        # Set common headers for all requests
+        $Headers = @{
+            "x-ms-date" = [DateTime]::UtcNow.ToString("R")
+            "Accept" = "application/json;odata=nometadata"
+        }
+
+        # First check if entity exists by attempting to retrieve it
+        $QueryUri = "{0}{1}" -f $EntityUri, $SasToken
+        Write-Log "Querying for existing entity: $EntityUri" -Level "DEBUG"
+
+        $entityExists = $false
+        $etag = $null
+        $existingEntity = $null
+
+        try {
+            $existingEntity = Invoke-RestMethod -Uri $QueryUri -Method "Get" -Headers $Headers
+            $entityExists = $true
+            $etag = $existingEntity["odata.etag"]
+            Write-Log "Found existing entity with ETag: $etag" -Level "DEBUG"
+        }
+        catch {
+            if ($_.Exception.Response.StatusCode -eq 404) {
+                Write-Log "No existing entity found, will insert new entity" -Level "DEBUG"
             }
-            if ($PSBoundParameters.ContainsKey('CreatedAt')) {
-                $entity.Properties["CreatedAt"] = $CreatedAt
-            }
-            if ($PSBoundParameters.ContainsKey('Version')) {
-                $entity.Properties["Version"] = $Version
+            else {
+                throw  # Re-throw for other errors
             }
         }
 
-        $operation = [Microsoft.Azure.Cosmos.Table.TableOperation]::InsertOrMerge($entity)
-        $result = $table.Execute($operation)
+        # Create entity payload with properties
+        $entityProperties = @{
+            "PartitionKey" = $partitionKey
+            "RowKey" = $rowKey
+        }
+
+        # Handle properties based on entity existence
+        if (!$entityExists) {
+            # For new entity, set all values
+            $entityProperties["ReleaseNotes"] = $ReleaseNotes
+            $entityProperties["CreatedAt"] = $CreatedAt.ToString("o")
+            $entityProperties["Version"] = $Version
+        } else {
+            # For existing entity, only update if values are provided
+            if ($PSBoundParameters.ContainsKey('ReleaseNotes')) {
+                $entityProperties["ReleaseNotes"] = $ReleaseNotes
+            }
+            if ($PSBoundParameters.ContainsKey('CreatedAt')) {
+                $entityProperties["CreatedAt"] = $CreatedAt.ToString("o")
+            }
+            if ($PSBoundParameters.ContainsKey('Version')) {
+                $entityProperties["Version"] = $Version
+            }
+        }
+
+        $entityPayload = $entityProperties | ConvertTo-Json
+        Write-Log "Created entity payload: $entityPayload" -Level "DEBUG"
+
+        # URI for table entity operations
+        $TableEntityUri = "{0}{1}{2}" -f $BaseUri, $StateTableName, $SasToken
+
+        # Different approach based on entity existence
+        if ($entityExists) {
+            # Update existing entity
+            $MergeUri = "{0}{1}" -f $EntityUri, $SasToken
+            $MergeHeaders = $Headers.Clone()
+            $MergeHeaders["If-Match"] = $etag
+            $MergeHeaders["Content-Type"] = "application/json"
+
+            Write-Log "Updating existing entity with MERGE operation" -Level "DEBUG"
+            $response = Invoke-RestMethod -Uri $MergeUri -Method "MERGE" -Headers $MergeHeaders -Body $entityPayload
+        }
+        else {
+            # Insert new entity
+            $InsertHeaders = $Headers.Clone()
+            $InsertHeaders["Content-Type"] = "application/json"
+
+            Write-Log "Inserting new entity" -Level "DEBUG"
+            $response = Invoke-RestMethod -Uri $TableEntityUri -Method "POST" -Headers $InsertHeaders -Body $entityPayload
+        }
 
         Write-Log "Successfully updated release notes for $PackageName version $Version" -Level "INFO"
         return $true
     }
     catch {
-        Write-Log "Failed to update release notes: $_" -Level "ERROR"
+        $errorDetails = @{
+            Message    = $_.Exception.Message
+            Line       = $_.InvocationInfo.ScriptLineNumber
+            ScriptName = $_.InvocationInfo.ScriptName
+            StackTrace = $_.Exception.StackTrace
+        } | ConvertTo-Json
+        Write-Log "Failed to update release notes: $errorDetails" -Level "ERROR"
         return $false
     }
 }
@@ -67,8 +172,16 @@ function Update-ReleaseNotes {
 function Get-CombinedReleaseNotes {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $true)]
-        [Microsoft.Azure.Cosmos.Table.CloudTable]$table,
+        [Parameter(Mandatory = $true, ParameterSetName = "SecureSasToken")]
+        [ValidateNotNull()]
+        [SecureString] $SecureSasToken,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "SasTokenFromEnvVariable")]
+        [String] $SasTokenFromEnvironmentVariable,
+
+        [Parameter(Mandatory = $true, ParameterSetName = "UnsecureSasToken")]
+        [ValidateNotNullOrEmpty()]
+        [String] $SasToken,
 
         [Parameter(Mandatory = $true)]
         [string]$PackageName,
@@ -77,19 +190,69 @@ function Get-CombinedReleaseNotes {
         [string]$ModulePath,
 
         [Parameter(Mandatory = $false)]
-        [string]$Version
+        [string]$Version,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateAccount = "ipmhubsponstor01weust",
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [String] $StateTableName = "AvmPackageReleaseNotes",
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $RunLocal = $false
     )
 
     try {
         Write-Log "Getting combined release notes for package '$PackageName' up to version '$Version'" -Level "INFO"
 
-        # Query all versions for this package
-        $query = [Microsoft.Azure.Cosmos.Table.TableQuery]::new()
-        $filter = "PartitionKey eq '$PackageName'"
-        $query.FilterString = $filter
+        if ($RunLocal)
+        {
+            $StateTableName = "{0}{1}" -f "TEST", $StateTableName
+            Write-Log "Running locally, using test table: $StateTableName" -Level "DEBUG"
+        }
 
-        $results = $table.ExecuteQuery($query)
-        Write-Log "Found $($results.Count) total versions for package '$PackageName'" -Level "DEBUG"
+        # Parse SAS token from the appropriate parameter
+        If ($PSCmdlet.ParameterSetName -eq "SasTokenFromEnvVariable")
+        {
+            $SasToken = [System.Environment]::GetEnvironmentVariable($SasTokenFromEnvironmentVariable)
+        }
+        ElseIf ($PSCmdlet.ParameterSetName -eq "SecureSasToken")
+        {
+            $BSTR = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureSasToken)
+            $SasToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        }
+
+        # Ensure SAS token has proper format
+        If (-not $SasToken.StartsWith("?"))
+        {
+            $SasToken = "?{0}" -f $SasToken
+        }
+
+        $BaseUri = "https://{0}.table.core.windows.net/" -f $StateAccount
+
+        # Create query to get all entities for this partition key
+        $filter = "PartitionKey eq '{0}'" -f $PackageName
+        $encodedFilter = [System.Web.HttpUtility]::UrlEncode($filter)
+        $QueryUri = "{0}{1}{2}&`$filter={3}" -f $BaseUri, $StateTableName, $SasToken, $encodedFilter
+
+        $Headers = @{
+            "x-ms-date" = [DateTime]::UtcNow.ToString("R")
+            "Accept" = "application/json;odata=nometadata"
+        }
+
+        Write-Log "Querying for all versions of package: $PackageName" -Level "DEBUG"
+
+        try {
+            $response = Invoke-RestMethod -Uri $QueryUri -Method "Get" -Headers $Headers
+            $results = $response.value
+            Write-Log "Found $($results.Count) total versions for package '$PackageName'" -Level "DEBUG"
+        }
+        catch {
+            Write-Log "Error querying table: $($_.Exception.Message)" -Level "ERROR"
+            throw
+        }
 
         if ($results.Count -eq 0) {
             Write-Log "No release notes found for package '$PackageName'" -Level "WARNING"
@@ -104,14 +267,19 @@ function Get-CombinedReleaseNotes {
         if ($Version) {
             $targetVersion = [Version]($Version.TrimStart('v'))
             $results = $results | Where-Object {
-                $currentVersion = [Version]($_.Properties["Version"].StringValue.TrimStart('v'))
-                $currentVersion -le $targetVersion
+                if (![string]::IsNullOrEmpty($_.Version)) {
+                    $currentVersion = [Version]($_.Version.TrimStart('v'))
+                    $currentVersion -le $targetVersion
+                } else {
+                    $false
+                }
             }
             Write-Log "Filtered to $($results.Count) versions up to $Version" -Level "DEBUG"
         }
 
         # Sort by CreatedAt date in reverse order (newest first)
-        $sortedResults = $results | Sort-Object { $_.Properties["CreatedAt"].DateTime } -Descending
+        $sortedResults = $results | Where-Object { $_.CreatedAt } |
+                          Sort-Object { [DateTime]::Parse($_.CreatedAt) } -Descending
         Write-Log "Sorted results by creation date (newest first)" -Level "DEBUG"
 
         # Combine release notes with newest first
@@ -121,13 +289,10 @@ function Get-CombinedReleaseNotes {
         [void]$combinedNotes.AppendLine("")
 
         foreach ($result in $sortedResults) {
-            if ($result.Properties.ContainsKey("ReleaseNotes") -and
-                $result.Properties.ContainsKey("Version") -and
-                $result.Properties.ContainsKey("CreatedAt")) {
-
-                $version = $result.Properties["Version"].StringValue
-                $notes = $result.Properties["ReleaseNotes"].StringValue.Trim()
-                $date = $result.Properties["CreatedAt"].DateTime.ToString("yyyy-MM-dd")
+            if ($result.ReleaseNotes -and $result.Version -and $result.CreatedAt) {
+                $version = $result.Version
+                $notes = $result.ReleaseNotes.Trim()
+                $date = [DateTime]::Parse($result.CreatedAt).ToString("yyyy-MM-dd")
 
                 Write-Log "Processing version $version from $date" -Level "DEBUG"
                 [void]$combinedNotes.AppendLine("## Version $version - $date")
@@ -147,7 +312,13 @@ function Get-CombinedReleaseNotes {
         return $releaseNotes
     }
     catch {
-        Write-Log "Failed to get combined release notes: $_" -Level "ERROR"
+        $errorDetails = @{
+            Message    = $_.Exception.Message
+            Line       = $_.InvocationInfo.ScriptLineNumber
+            ScriptName = $_.InvocationInfo.ScriptName
+            StackTrace = $_.Exception.StackTrace
+        } | ConvertTo-Json
+        Write-Log "Failed to get combined release notes: $errorDetails" -Level "ERROR"
         throw
     }
 }

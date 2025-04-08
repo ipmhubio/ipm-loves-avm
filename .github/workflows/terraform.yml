@@ -9,29 +9,48 @@ jobs:
   download:
     name: Download AVM Terraform Packages
     runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      - name: Install IPM CLI
+        shell: bash
+        run: |
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            tar -xzf ipm-cli.tar.gz
+            sudo mv ./ipm /usr/local/bin/ipm
       - name: Run Download Script
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBAPITOKEN }}
-          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
+          # Change working directory to scripts/terraform
+          cd scripts/terraform
           $params = @{
             GithubToken = $env:GITHUB_TOKEN
             StagingDirectory = "staging"
-            StorageAccountName = "ipmhubsponstor01weust"
-            StorageSasToken = $env:SAS_TOKEN
-            TableName = "AvmPackageVersions"
-            TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF
-            TableNameReleaseNotes = "AvmPackageReleaseNotes"
-            UseAzurite = $false
+            StorageSasToken = $env:SAS_TOKEN_AVM_TF  # Pass directly as parameter
           }
-          import-module ./scripts/terraform/avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
-          & ./scripts/terraform/Get-AvmTerraformPackages.ps1 @params
+          Write-Host "Environment variables check:"
+          Write-Host "SAS_TOKEN_AVM_TF is set: $([string]::IsNullOrEmpty($env:SAS_TOKEN_AVM_TF) ? 'No' : 'Yes')"
+          Write-Host "SAS_TOKEN_AVM_TF length: $($env:SAS_TOKEN_AVM_TF.Length)"
+          import-module ./avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
+          & ./Get-AvmTerraformPackages.ps1 @params
         shell: pwsh
+
+      - name: Check if staging directory has content
+        id: check_changes
+        run: |
+          if [ -d "scripts/terraform/staging" ] && [ "$(ls -A scripts/terraform/staging 2>/dev/null)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes found in staging directory. Workflow will skip test and publish jobs."
+          fi
+        shell: bash
+
       - name: Upload staging directory as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -42,10 +61,18 @@ jobs:
   test:
     name: Test AVM Terraform Packages
     needs: download
+    if: needs.download.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install IPM CLI
+        shell: bash
+        run: |
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            tar -xzf ipm-cli.tar.gz
+            sudo mv ./ipm /usr/local/bin/ipm
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
@@ -60,19 +87,17 @@ jobs:
 
       - name: Run Test Script
         env:
-          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
         run: |
+          # Change working directory to scripts/terraform
+          cd scripts/terraform
           $params = @{
             StagingDirectory = "staging"
             SkipTests = $false
-            StorageAccountName = "ipmhubsponstor01weust"
-            StorageSasToken = $env:SAS_TOKEN
-            TableName = "AvmPackageVersions"
-            TableNameReleaseNotes = "AvmPackageReleaseNotes"
-            UseAzurite = $false
+            StorageSasToken = $env:SAS_TOKEN_AVM_TF  # Pass directly as parameter
           }
-          import-module ./scripts/terraform/avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
-          & ./scripts/terraform/Test-AvmTerraformPackages.ps1 @params
+          import-module ./avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
+          & ./Test-AvmTerraformPackages.ps1 @params
         shell: pwsh
       - name: Upload tested staging directory as artifact
         uses: actions/upload-artifact@v4
@@ -84,6 +109,7 @@ jobs:
   publish:
     name: Publish AVM Terraform Packages to IPM
     needs: test
+    if: needs.download.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -97,28 +123,26 @@ jobs:
             sudo mv ./ipm /usr/local/bin/ipm
 
       - name: Download tested staging directory
-
         uses: actions/download-artifact@v4
         with:
           name: staging-tested
           path: scripts/terraform/staging
 
-      - name: Run Test Script
+      - name: Run Publish Script
         env:
-          IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS-TF-AVM }}
-          SAS_TOKEN: ${{ secrets.SAS_TOKEN_AVM_TF }}
+          IPM_CLIENT_SECRETS: ${{ secrets.IPM_CLIENT_SECRETS_TF_AVM }}
+          SAS_TOKEN_AVM_TF: ${{ secrets.SAS_TOKEN_AVM_TF }}
           PACKAGE_CREATION_API: ${{ secrets.PACKAGE_CREATION_API }}
           TEAMS_WEBHOOK_URL_TF: ${{ secrets.TEAMS_WEBHOOK_URL_TF }}
         run: |
+          # Change working directory to scripts/terraform
+          cd scripts/terraform
           $params = @{
-            localRun = $false
+            ipmSecret = $env:IPM_CLIENT_SECRETS
             logicAppUrl = $env:PACKAGE_CREATION_API
-            StorageAccountName = "ipmhubsponstor01weust"
             StagingDirectory = "staging"
-            StorageSasToken = $env:SAS_TOKEN
-            TableName = "AvmPackageVersions"
             TeamsWebhookUrl = $env:TEAMS_WEBHOOK_URL_TF
-            UseAzurite = $false
+            StorageSasToken = $env:SAS_TOKEN_AVM_TF  # Pass directly as parameter
           }
-          pwsh -File ./scripts/terraform/Publish-AvmTerraformPackages.ps1 @params
+          & ./Publish-AvmTerraformPackages.ps1 @params
         shell: pwsh

@@ -1,5 +1,3 @@
-using namespace Microsoft.Azure.Cosmos.Table
-
 <#
 .SYNOPSIS
     Discovers and downloads Azure Verified Modules (AVM) Terraform packages.
@@ -18,12 +16,8 @@ using namespace Microsoft.Azure.Cosmos.Table
     Azure Storage Table Name for release notes.
 .PARAMETER StagingDirectory
     Directory where packages will be downloaded and processed.
-.PARAMETER ipmOrganization
-    IPM organization name.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
-.PARAMETER UseAzurite
-    Boolean flag to indicate if Azurite should be used for local development.
 #>
 
 [CmdletBinding()]
@@ -50,18 +44,14 @@ param (
     [string]$StagingDirectory = "staging",
 
     [Parameter(Mandatory = $false)]
-    [string]$ipmOrganization = "avm-tf",
-
-    [Parameter(Mandatory = $false)]
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true,
-
-    [Parameter(Mandatory = $false)]
-    [bool]$localrun = $false
+    [Switch]$RunLocal = $false
 )
-
+Write-Host "Environment variables check:"
+Write-Host "SAS_TOKEN_AVM_TF is set: $([string]::IsNullOrEmpty($env:SAS_TOKEN_AVM_TF) ? 'No' : 'Yes')"
+Write-Host "SAS_TOKEN_AVM_TF length: $($env:SAS_TOKEN_AVM_TF.Length)"
 # Get the module path
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1"
 
@@ -106,14 +96,6 @@ if (-not (Get-Command -Name "Write-Log" -ErrorAction SilentlyContinue))
     throw "Write-Log function is not available. Check module export settings."
 }
 
-# Install and import required Azure Table Storage module
-if (-not (Get-Module -ListAvailable -Name AzTable))
-{
-    Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
-}
-Import-Module -Name AzTable -Force
-
-#region Main Execution
 $ErrorActionPreference = "Stop"
 $downloadedCount = 0
 $failedCount = 0
@@ -121,18 +103,6 @@ $failedPackages = @()
 
 try
 {
-    # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
-
-    $releaseNotesTable = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableNameReleaseNotes `
-        -UseAzurite $UseAzurite
 
     # Initialize environment
     Initialize-Environment -StagingDirectory $StagingDirectory
@@ -188,7 +158,7 @@ try
 
             # Check if this version is already processed
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
-            $existingState = Get-PackageVersionState -Table $table -PackageName $repoName -Version $version
+            $existingState = Get-PackageVersionState -PackageName $repoName -Version $version -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             Write-Log "Current state $existingState" -Level "DEBUG"
 
             # Skip processing if already processed
@@ -199,16 +169,17 @@ try
             }
 
             # Update state to Downloading
-            Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at
+            Update-PackageVersionState -PackageName $repoName -Version $version -Status "Downloading" -published $release.published_at -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
             # Update release notes before processing
             write-log "Updating release notes for $repoName version $version" -Level "INFO"
             Update-ReleaseNotes `
-                -table $releaseNotesTable `
                 -PackageName $repoName `
                 -Version $version `
                 -ReleaseNotes $release.body `
-                -CreatedAt $release.created_at
+                -CreatedAt $release.created_at `
+                -RunLocal:$RunLocal `
+                -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
             # Download and extract the package
             $moduleResult = Get-AvmTerraformModule -PackageName $repoName -Version $version -TarballUrl $release.tarball_url `
@@ -222,13 +193,13 @@ try
                 Copy-ExtractedToIpmBuild -ExtractedPath $extractedPath -VersionFolderPath $versionFolderPath
 
                 # Update state to Downloaded
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Downloaded"
+                Update-PackageVersionState -PackageName $repoName -Version $version -Status "Downloaded" -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
                 $downloadedCount++
             }
             else
             {
                 Write-Log "Failed to download $repoName version $version : $($moduleResult.Message)" -Level "ERROR"
-                Update-PackageVersionState -Table $table -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message
+                Update-PackageVersionState -PackageName $repoName -Version $version -Status "Failed" -ErrorMessage $moduleResult.Message -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
                 $failedCount++
                 $failedPackages += "$repoName v$version"
             }

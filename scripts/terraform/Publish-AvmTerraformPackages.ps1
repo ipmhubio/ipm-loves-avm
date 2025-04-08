@@ -1,4 +1,4 @@
-using namespace Microsoft.Azure.Cosmos.Table
+
 
 <#
 .SYNOPSIS
@@ -20,8 +20,6 @@ using namespace Microsoft.Azure.Cosmos.Table
     IPM organization name.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
-.PARAMETER UseAzurite
-    Boolean flag to indicate if Azurite should be used for local development.
 #>
 
 [CmdletBinding()]
@@ -52,21 +50,15 @@ param (
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true,
+    [Switch]$LocalRun = $false,
 
     [Parameter(Mandatory = $false)]
-    [bool]$LocalRun = $false
+    [string]$ipmSecret = $env:IPM_CLIENT_SECRETS
 )
 
 # Import required modules and types
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1") -Force
 
-# Install and import required Azure Table Storage module
-if (-not (Get-Module -ListAvailable -Name AzTable))
-{
-    Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
-}
-Import-Module AzTable
 
 #region Main Execution
 $ErrorActionPreference = "Stop"
@@ -76,14 +68,6 @@ $failedPackages = @()
 
 try
 {
-    # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
-
-
     # Verify staging directory exists
     if (-not (Test-Path $StagingDirectory))
     {
@@ -92,7 +76,7 @@ try
     }
 
     # Get all packages that are in Tested state from the table
-    $packagesToPublish = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Tested" }
+    $packagesToPublish = Get-TableEntities -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF" | Where-Object { $_.Status -eq "Tested" }
 
     Write-Log "Found $($packagesToPublish.Count) packages to publish" -Level "INFO"
 
@@ -126,7 +110,7 @@ try
     $packageEnsuranceResult = Invoke-IpmHubPackageEnsurance `
         -Packages $newPackages `
         -PackageCreationApi $logicAppUrl `
-        -LocalRun $LocalRun
+        -LocalRun:$LocalRun
 
     # Report on package creation results
     if ($packageEnsuranceResult.Failed -gt 0)
@@ -173,7 +157,7 @@ try
         Write-Log "Publishing package: $packageName version: $version" -Level "INFO"
 
         # Update state to Publishing
-        Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Publishing"
+        Update-PackageVersionState -PackageName $packageName -Version $version -Status "Publishing" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
         # Locate the build-for-ipm folder for this package
         $versionPath = $version -replace '-', '.'
@@ -182,7 +166,7 @@ try
         if (-not (Test-Path $packagePath))
         {
             Write-Log "Package path does not exist: $packagePath" -Level "ERROR"
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             continue
@@ -191,26 +175,27 @@ try
         # Check if running locally
         $isLocalRun = $LocalRun
         Write-Log "Publishing with LocalRun set to: $isLocalRun" -Level "DEBUG"
-
+        $ipmPackageName = New-IpmPackageName -TerraformName $packageName
         # Publish to IPM
         $publishResult = Publish-ToIpm `
             -PackagePath $packagePath `
-            -PackageName $packageName `
+            -PackageName $ipmPackageName `
             -ipmOrganization $ipmOrganization `
             -Version $version `
-            -LocalRun $isLocalRun
+            -LocalRun $isLocalRun `
+            -ipmSecret $ipmSecret
 
         if ($publishResult.Success -eq $true)
         {
             # Update state to Published
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Published-tested" -ErrorMessage $null
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Published-tested" -ErrorMessage $null -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $publishedCount++
             Write-Log "Successfully published $packageName v$version" -Level "SUCCESS"
         }
         else
         {
             # Update state to Failed
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Failed to publish: $($publishResult.Message)"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Failed to publish: $($publishResult.Message)" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             Write-Log "Failed to publish $packageName v$version : $($publishResult.Message)" -Level "ERROR"
@@ -279,7 +264,7 @@ try
             $summaryMessage += ($failedPackages | ForEach-Object { "- $_" }) -join "`n"
         }
 
-        Send-TeamsNotification -Message $summaryMessage -WebhookUrl $TeamsWebhookUrl -Title "AVM Terraform Package Processing Report" -Color $color
+        Send-TeamsNotification -Message $summaryMessage -Title "AVM Terraform Package Processing Report" -Color $color
     }
 
     Write-Log "=================================================" -Level "INFO"

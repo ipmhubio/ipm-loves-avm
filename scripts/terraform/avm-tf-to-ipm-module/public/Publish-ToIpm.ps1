@@ -11,7 +11,8 @@ function Publish-ToIpm
         [string]$ipmOrganization,
         [Parameter(Mandatory = $true)]
         [string]$Version,
-        [bool]$LocalRun = $false
+        [bool]$LocalRun = $false,
+        [string]$ipmSecret = $env:IPM_CLIENT_SECRETS
     )
 
     try
@@ -41,7 +42,8 @@ function Publish-ToIpm
                 "--package", $fullPackageName,
                 "--version", $version,
                 "--folder", $PackagePath,
-                "--non-interactive"
+                "--non-interactive",
+                "--client-secrets", $ipmSecret
             ) -PassThru -Wait
 
             if ($process.ExitCode -ne 0)

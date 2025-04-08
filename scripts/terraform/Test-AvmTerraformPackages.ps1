@@ -1,4 +1,3 @@
-using namespace Microsoft.Azure.Cosmos.Table
 
 <#
 .SYNOPSIS
@@ -10,14 +9,10 @@ using namespace Microsoft.Azure.Cosmos.Table
     Azure Storage Account Name for state management.
 .PARAMETER StorageAccountKey
     Azure Storage Account Key for state management.
-.PARAMETER TableName
-    Azure Storage Table Name for state management.
 .PARAMETER StagingDirectory
     Directory where packages are downloaded and processed.
 .PARAMETER TeamsWebhookUrl
     Microsoft Teams webhook URL for status reporting.
-.PARAMETER UseAzurite
-    Boolean flag to indicate if Azurite should be used for local development.
 .PARAMETER SkipTests
     Boolean flag to skip actual terraform testing (for development purposes).
 #>
@@ -35,9 +30,6 @@ param (
     [string]$StorageSasToken,
 
     [Parameter(Mandatory = $false)]
-    [string]$TableName = "AvmPackageVersions",
-
-    [Parameter(Mandatory = $false)]
     [string]$TableNameReleaseNotes = "AvmPackageReleaseNotes",
 
     [Parameter(Mandatory = $false)]
@@ -47,21 +39,15 @@ param (
     [string]$TeamsWebhookUrl,
 
     [Parameter(Mandatory = $false)]
-    [bool]$UseAzurite = $true,
+    [bool]$SkipTests = $false,
 
     [Parameter(Mandatory = $false)]
-    [bool]$SkipTests = $false
+    [switch]$localrun = $false
 )
 
 # Import required modules and types
 Import-Module (Join-Path -Path $PSScriptRoot -ChildPath "avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1") -Force
 
-# Install and import required Azure Table Storage module
-if (-not (Get-Module -ListAvailable -Name AzTable))
-{
-    Install-Module -Name AzTable -Force -AllowClobber -Scope CurrentUser
-}
-Import-Module AzTable
 
 #region Main Execution
 $ErrorActionPreference = "Stop"
@@ -71,18 +57,6 @@ $failedPackages = @()
 
 try
 {
-    # Initialize Azure Storage Table with Azurite support
-    $table = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableName `
-        -UseAzurite $UseAzurite
-
-    $releaseNotesTable = Initialize-AzureStorageTable `
-        -StorageAccountName $StorageAccountName `
-        -SasToken $StorageSasToken `
-        -TableName $TableNameReleaseNotes `
-        -UseAzurite $UseAzurite
 
     # Verify staging directory exists
     if (-not (Test-Path $StagingDirectory))
@@ -147,7 +121,7 @@ try
     Write-Log "Found $($packagesToTest.Count) packages to test" -Level "INFO"
 
     # Get all packages with 'Downloaded' status from the table
-    $downloadedPackages = Get-TableEntities -Table $table | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
+    $downloadedPackages = Get-TableEntities -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF" | Where-Object { $_.Status -eq "Downloaded" -or $_.Status -eq "Failed"}
     Write-Log "Found $($downloadedPackages.Count) packages with 'Downloaded' status in the table" -Level "INFO"
     WRITE-LOG "Downloaded packages: $($downloadedPackages | ConvertTo-Json -Depth 10)" -Level "DEBUG"
     foreach ($package in $packagesToTest)
@@ -170,13 +144,13 @@ try
         Write-Log "Testing package: $packageName version: $version" -Level "INFO"
 
         # Update state to Testing
-        Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Testing"
+        Update-PackageVersionState -PackageName $packageName -Version $version -Status "Testing" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
         # Package path is directly from our directory scan
         if (-not (Test-Path $packagePath))
         {
             Write-Log "Package path does not exist: $packagePath" -Level "ERROR"
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Package path not found" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             continue
@@ -196,7 +170,7 @@ try
 
         # Update documentation
         Write-Log "Updating documentation for $packageName v$version..." -Level "INFO"
-        $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $packagePath -Table $releaseNotesTable -PackageName $packageName -Version $version
+        $docUpdateSuccess = Update-ModuleDocumentation -ModulePath $packagePath  -PackageName $packageName -Version $version -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
 
         if (-not $docUpdateSuccess)
         {
@@ -234,14 +208,14 @@ try
         if ($testSuccess)
         {
             # Update state to Tested
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Tested"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Tested" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $testedCount++
             Write-Log "Successfully tested $packageName v$version" -Level "SUCCESS"
         }
         else
         {
             # Update state to Failed
-            Update-PackageVersionState -Table $table -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Terraform validation failed"
+            Update-PackageVersionState -PackageName $packageName -Version $version -Status "Failed" -ErrorMessage "Terraform validation failed" -RunLocal:$LocalRun -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
             $failedCount++
             $failedPackages += "$packageName v$version"
             Write-Log "Failed testing $packageName v$version" -Level "ERROR"

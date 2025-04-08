@@ -11,7 +11,7 @@ Function Invoke-IpmHubPackageEnsurance
     [String] $PackageCreationApi,
 
     [Parameter(Mandatory = $False)]
-    [bool]$LocalRun = $False
+    [switch]$LocalRun = $False
   )
 
   Begin
@@ -25,16 +25,16 @@ Function Invoke-IpmHubPackageEnsurance
   {
 
     # Log the package data for troubleshooting
-    Write-Log "Package data to process: $($PackageData.Count) packages" -Level "INFO"
 
     $PackageData = [Array] ($Packages | ForEach-Object {
       @{
-        packageName = $_.Name
-        description = ($_.Description ?? "")
+        packageName     = $_.Name
+        description     = ($_.Description ?? "")
         descriptionLang = ($_.descriptionLang ?? "en")
-        projectUri = ($_.projectUri ?? "https://ipmhub.io/avm-terraform")
+        projectUri      = ($_.projectUri ?? "https://ipmhub.io/avm-terraform")
       }
     }) ?? @()
+    Write-Log "Package data to process: $($PackageData.Count) packages" -Level "INFO"
 
     if ($LocalRun)
     {
@@ -51,6 +51,7 @@ Function Invoke-IpmHubPackageEnsurance
           statusCode    = Get-Random -Minimum 200 -Maximum 201 # Random between 200 (exists) and 201 (created)
         }
       }
+      return $Response
     }
     else
     {
@@ -78,15 +79,19 @@ Function Invoke-IpmHubPackageEnsurance
 
     # Check for errors in the response - handle both single and array responses
     $hasErrors = $false
-    if ($Response -is [Array]) {
+    if ($Response -is [Array])
+    {
       # For array responses, check each item
       $hasErrors = ($Response | Where-Object { $_.statusCode -ne 200 -and $_.statusCode -ne 201 }).Count -gt 0
-    } else {
+    }
+    else
+    {
       # For single object response, check directly
       $hasErrors = $Response.statusCode -ne 200 -and $Response.statusCode -ne 201
     }
 
-    if ($hasErrors) {
+    if ($hasErrors)
+    {
       Write-Log "Error in response from IPMHub API: $($Response | ConvertTo-Json -Depth 10)" -Level "ERROR"
       throw "Failed to ensure packages in IPMHub"
     }
