@@ -9,6 +9,8 @@ jobs:
   download:
     name: Download AVM Terraform Packages
     runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
