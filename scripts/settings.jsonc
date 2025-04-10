@@ -91,6 +91,14 @@
       "replacement": "avd-workspace"
     },
     {
+      "search": "log-analytics-avd-workspaces",
+      "replacement": "log-analytics-workspaces"
+    },
+    {
+      "search": "synapse-avd-workspaces",
+      "replacement": "synapse-workspaces"
+    },
+    {
       "search": "redis-enterprise-and-managed-redis-preview",
       "replacement": "cache-redis-enterprise"
     },
