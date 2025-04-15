@@ -180,7 +180,7 @@ try
 
         # Update telemetry settings
         Write-Log "Updating telemetry settings for $packageName v$version..." -Level "INFO"
-
+        $ipmPackageName = New-IpmPackageName -TerraformName $packageName
         @(
             @{
                 Action         = { Update-TelemetryDefault -Path $packagePath }
@@ -192,6 +192,11 @@ try
                 SuccessMessage    = "Successfully updated telemetry documentation"
                 WarningMessage    = "Failed to update telemetry documentation"
                 DependsOnPrevious = $true
+            },
+            @{
+                Action         = { Update-AVMModuleSourceInMarkdown -Path $packagePath -ipmPackageName $ipmPackageName }
+                SuccessMessage = "Successfully updated AVM module source in documentation"
+                WarningMessage = "Failed to update AVM module source in documentation"
             }
         ) | ForEach-Object {
             $result = $true

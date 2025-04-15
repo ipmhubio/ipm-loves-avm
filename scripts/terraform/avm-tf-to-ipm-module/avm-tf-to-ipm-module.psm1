@@ -83,5 +83,6 @@ Export-ModuleMember -Function @(
   'Update-TelemetryDefaultInMarkdown',
   'Write-Log',
   'Get-ValidPackageName',
-  'Add-DisclaimerFile'
+  'Add-DisclaimerFile',
+  'Update-AVMModuleSourceInMarkdown'
 )
