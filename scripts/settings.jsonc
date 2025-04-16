@@ -99,6 +99,19 @@
       "replacement": "synapse-workspaces"
     },
     {
+      "search": "databricks-avd-workspaces",
+      "replacement": "databricks-workspaces"
+    },
+    {
+      "search": "healthcare-api-avd-workspaces",
+      "replacement": "healthcare-api-workspaces"
+    },
+
+    {
+      "search": "machine-learning-avd-workspace",
+      "replacement": "machine-learning-workspace"
+    },
+    {
       "search": "redis-enterprise-and-managed-redis-preview",
       "replacement": "cache-redis-enterprise"
     },
