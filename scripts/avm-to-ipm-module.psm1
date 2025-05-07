@@ -747,30 +747,44 @@ Function Add-AdditionalMetadataToBicepFile
 
     $BicepContent = Get-Content -Path $BicepFile -Encoding "UTF8"
     $FinalBicepContent = New-Object System.Collections.Generic.List[string]
+    $DescriptionStartFound = $False
+    $DescriptionEndFound = $False
+    $DescriptionIsMultiline = $False
+    $MetadataPlaced = $False
     For ($x = 0; $x -lt $BicepContent.Count; $x++)
     {
-      $OwnerFound = $False
       $Line = $BicepContent[$x]
-      If ($Null -eq $Line -or $Line.Length -eq 0)
+      $FinalBicepContent.Add($Line ?? "")
+      If ($MetadataPlaced)
       {
-        $FinalBicepContent.Add("")
         Continue
       }
 
+      # Make sure that we have a line that does not end with tabs or spaces.
+      $Line = $Line.TrimEnd().Trim('\t')
+
       # Found the description metadata element ?
-      $OwnerFound = $Line -like "*metadata owner*"
-      If ($OwnerFound)
+      If (-not $DescriptionStartFound -and $Line -match "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*('{1,3})(.*?)(\1)?(?:[ \t]*//.*)?$")
       {
-        "{0} - Found owner on line {1}. Appending metadata..." -f $MyInvocation.MyCommand, ($x+1) | Write-Verbose
+        $DescriptionStartFound = $True
+        $DescriptionIsMultiLine = $Matches[1] -eq "'''"
+        $DescriptionEndFound = (($Matches[3] -eq "'''") -or ($Matches[3] -eq "'"))
+      } `
+      ElseIf ($DescriptionStartFound -and $DescriptionIsMultiline -and (-not $DescriptionEndFound -and $Line -match "'''[ \t]*(//.*)?$"))
+      {
+        $DescriptionEndFound = $True
+      }
+
+      If ($DescriptionEndFound)
+      {
+        "{0} - Found description on line {1}. Appending metadata..." -f $MyInvocation.MyCommand, ($x+1) | Write-Verbose
         ForEach($Key in $MetadataKeys)
         {
           $FinalBicepContent.Add(("metadata {0} = '{1}'" -f $Key, $Metadata.$Key))
         }
+
+        $MetadataPlaced = $True
       }
-
-      # TODO: New bicep files are missing the owner metadata.
-
-      $FinalBicepContent.Add($Line)
     }
 
     Set-Content -Path $BicepFile -Value $FinalBicepContent.ToArray() -Encoding "UTF8" | Out-Null
