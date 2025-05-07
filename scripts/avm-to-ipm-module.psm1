@@ -768,6 +768,8 @@ Function Add-AdditionalMetadataToBicepFile
         }
       }
 
+      # TODO: New bicep files are missing the owner metadata.
+
       $FinalBicepContent.Add($Line)
     }
 

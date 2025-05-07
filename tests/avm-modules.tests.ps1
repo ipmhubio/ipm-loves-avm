@@ -72,9 +72,12 @@ Describe 'Runtime BICEP tests' {
           $Version = "<version>"
           Throw ("Found a reference to public registry module '{0}/{1}'." -f $Type, $Name)
         }
-
       }
     }
+
+    $Script:VersionFound | Should -Be $True
+    $Script:PublishedOnFound | Should -Be $True
+    $Script:TelemetryParameterFound | Should -Be $True
   }
 
   It '<relativePath> parses successfully' -ForEach $Script:TestCases {
