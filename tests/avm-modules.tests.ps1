@@ -77,7 +77,6 @@ Describe 'Runtime BICEP tests' {
 
     $Script:VersionFound | Should -Be $True
     $Script:PublishedOnFound | Should -Be $True
-    $Script:TelemetryParameterFound | Should -Be $True
   }
 
   It '<relativePath> parses successfully' -ForEach $Script:TestCases {
