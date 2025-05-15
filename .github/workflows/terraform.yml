@@ -40,14 +40,15 @@ jobs:
           & ./Get-AvmTerraformPackages.ps1 @params
         shell: pwsh
 
-      - name: Check if staging directory has content
+      - name: Check if staging directory has terraform folders
         id: check_changes
         run: |
-          if [ -d "scripts/terraform/staging" ] && [ "$(ls -A scripts/terraform/staging 2>/dev/null)" ]; then
+          if [ -d "scripts/terraform/staging" ] && [ "$(find scripts/terraform/staging -type d -name "terraform*" 2>/dev/null)" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Found folders starting with terraform in staging directory."
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "No changes found in staging directory. Workflow will skip test and publish jobs."
+            echo "No folders starting with terraform found in staging directory. Workflow will skip test and publish jobs."
           fi
         shell: bash
 
@@ -99,6 +100,7 @@ jobs:
           import-module ./avm-tf-to-ipm-module/avm-tf-to-ipm-module.psm1
           & ./Test-AvmTerraformPackages.ps1 @params
         shell: pwsh
+
       - name: Upload tested staging directory as artifact
         uses: actions/upload-artifact@v4
         with:
