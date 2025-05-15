@@ -43,25 +43,110 @@ jobs:
       - name: Check if staging directory has content
         id: check_changes
         run: |
-          if [ -d "scripts/terraform/staging" ] && [ -n "$(find scripts/terraform/staging -type f 2>/dev/null)" ]; then
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-            echo "Changes found in staging directory."
+          echo "Diagnostic: Listing current directory"
+          pwd
+          ls -la
+
+          echo "Diagnostic: Checking scripts/terraform directory"
+          if [ -d "scripts/terraform" ]; then
+            echo "scripts/terraform directory exists"
+            ls -la scripts/terraform
           else
+            echo "scripts/terraform directory does not exist"
+          fi
+
+          echo "Diagnostic: Checking scripts/terraform/staging directory"
+          if [ -d "scripts/terraform/staging" ]; then
+            echo "scripts/terraform/staging directory exists"
+            ls -la scripts/terraform/staging
+            echo "Files found:"
+            find scripts/terraform/staging -type f 2>/dev/null | while read file; do
+              echo "  - $file"
+            done
+
+            if [ -n "$(find scripts/terraform/staging -type f 2>/dev/null)" ]; then
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+              echo "Changes found in staging directory."
+            else
+              echo "No files found in staging directory despite directory existing."
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "scripts/terraform/staging directory does not exist"
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No changes found in staging directory. Workflow will skip test and publish jobs."
           fi
+
           echo "Output variable set to: $(cat $GITHUB_OUTPUT | grep has_changes)"
           # Make this very visible in logs
           echo "::notice::has_changes is set to $(cat $GITHUB_OUTPUT | grep has_changes | cut -d= -f2)"
         shell: bash
 
+      - name: Verify staging directory for artifact upload
+        id: verify_artifacts
+        run: |
+          echo "Verifying staging directory before artifact upload..."
+          if [ -d "scripts/terraform/staging" ]; then
+            echo "Directory exists: scripts/terraform/staging"
+
+            # List all files (including hidden ones)
+            echo "Directory contents (including hidden files):"
+            ls -la scripts/terraform/staging
+
+            # Check if there are actual files (not just directories)
+            FILE_COUNT=$(find scripts/terraform/staging -type f | wc -l)
+            echo "Number of files found: $FILE_COUNT"
+
+            if [ $FILE_COUNT -eq 0 ]; then
+              echo "::warning::No files found in staging directory. Artifact upload will likely fail."
+
+              # Check if there are only directories
+              DIR_COUNT=$(find scripts/terraform/staging -type d | wc -l)
+              echo "Number of directories found: $DIR_COUNT"
+
+              # If directories exist, list their contents
+              if [ $DIR_COUNT -gt 1 ]; then # Greater than 1 because the staging dir itself is counted
+                echo "Listing contents of subdirectories:"
+                find scripts/terraform/staging -type d -exec sh -c 'echo "Dir: {}"; ls -la "{}" 2>/dev/null || echo "  (empty or no access)"' \;
+              fi
+
+              # Force has_changes to false if no files
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+              echo "::notice::Resetting has_changes to false because no actual files were found"
+            else
+              # Check if the files are readable and not hidden
+              echo "Examining files that would be included in the artifact:"
+              find scripts/terraform/staging -type f -not -path "*/\.*" | while read file; do
+                if [ -r "$file" ]; then
+                  echo "  ✓ $file (readable)"
+                else
+                  echo "  ✗ $file (not readable)"
+                fi
+              done
+
+              # Check for hidden files that might not be included
+              HIDDEN_COUNT=$(find scripts/terraform/staging -type f -path "*/\.*" | wc -l)
+              if [ $HIDDEN_COUNT -gt 0 ]; then
+                echo "Warning: Found $HIDDEN_COUNT hidden files that might not be included in the artifact."
+                find scripts/terraform/staging -type f -path "*/\.*" | while read file; do
+                  echo "  - $file"
+                done
+              fi
+            fi
+          else
+            echo "::error::Directory does not exist: scripts/terraform/staging"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
       - name: Upload staging directory as artifact
         uses: actions/upload-artifact@v4
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.verify_artifacts.outputs.has_changes != 'false'
         with:
           name: staging-download
           path: scripts/terraform/staging
           retention-days: 1
+          include-hidden-files: true
 
   test:
     name: Test AVM Terraform Packages
