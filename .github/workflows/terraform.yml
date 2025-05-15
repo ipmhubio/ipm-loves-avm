@@ -45,10 +45,12 @@ jobs:
         run: |
           if [ -d "scripts/terraform/staging" ] && [ "$(ls -A scripts/terraform/staging 2>/dev/null)" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes found in staging directory."
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "No changes found in staging directory. Workflow will skip test and publish jobs."
           fi
+          echo "Output variable set to: $(cat $GITHUB_OUTPUT | grep has_changes)"
         shell: bash
 
       - name: Upload staging directory as artifact
@@ -64,6 +66,12 @@ jobs:
     if: needs.download.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Debug Output Variables
+        run: |
+          echo "has_changes value from download job: ${{ needs.download.outputs.has_changes }}"
+          echo "Checking if true: ${{ needs.download.outputs.has_changes == 'true' }}"
+        shell: bash
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
