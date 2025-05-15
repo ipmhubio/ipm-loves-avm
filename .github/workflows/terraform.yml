@@ -43,7 +43,7 @@ jobs:
       - name: Check if staging directory has content
         id: check_changes
         run: |
-          if [ -d "scripts/terraform/staging" ] && [ "$(ls -A scripts/terraform/staging 2>/dev/null)" ]; then
+          if [ -d "scripts/terraform/staging" ] && [ -n "$(find scripts/terraform/staging -type f 2>/dev/null)" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "Changes found in staging directory."
           else
@@ -51,10 +51,13 @@ jobs:
             echo "No changes found in staging directory. Workflow will skip test and publish jobs."
           fi
           echo "Output variable set to: $(cat $GITHUB_OUTPUT | grep has_changes)"
+          # Make this very visible in logs
+          echo "::notice::has_changes is set to $(cat $GITHUB_OUTPUT | grep has_changes | cut -d= -f2)"
         shell: bash
 
       - name: Upload staging directory as artifact
         uses: actions/upload-artifact@v4
+        if: steps.check_changes.outputs.has_changes == 'true'
         with:
           name: staging-download
           path: scripts/terraform/staging
