@@ -63,6 +63,10 @@
     {
       "search": "maintenance-maintenanceconfiguration",
       "replacement": "maintenanceconfiguration"
+    },
+    {
+      "search": "cosmos-db-for-mongodb-vcore-cluster,
+      "replacement": "cosmos-mongo-vcore-cluster"
     }
   ]
 }
