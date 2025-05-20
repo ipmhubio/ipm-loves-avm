@@ -37,6 +37,12 @@ jobs:
         fetch-depth: 0
         tags: true
 
+    - name: Download latest BICEP version
+      id: bicepdownload
+      run: |
+        curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
+      shell: pwsh
+      
     - name: Prepare the AVM modules to become IPMHub acceptable
       id: build
       run: |
@@ -108,7 +114,7 @@ jobs:
 
     - name: Download and install IPM binary
       run: |
-        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz
+        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.9.0/ipm-linux-x64-full.tar.gz
         sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
         rm /tmp/ipm.tar.gz
         sudo chmod +x /usr/local/bin/ipm
