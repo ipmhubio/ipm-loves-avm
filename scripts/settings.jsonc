@@ -43,6 +43,10 @@
       "replacement": "cosmos-db-for-mongodb"
     },
     {
+      "search": "cosmos-db-for-mongodb-vcore-cluster",
+      "replacement": "cosmos-db-for-mongodb"
+    },
+    {
       "search": "dbforpostgresql-flexible-servers",
       "replacement": "postgre-sql-flex-server"
     },
