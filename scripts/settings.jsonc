@@ -122,6 +122,10 @@
     {
       "search": "redis-enterprise-and-managed-redis",
       "replacement": "cache-redis-enterprise"
+    },
+    {
+      "search": "security-insights-data-connectors",
+      "replacement": "security-insights-data-connect"
     }
   ]
 }
