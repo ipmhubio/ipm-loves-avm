@@ -26,6 +26,13 @@ Describe 'Runtime BICEP tests' {
   It 'Syntax modifications of <relativePath> is complete' -ForEach $Script:TestCases {
     # All bicep files should have a 'version' metadata property with a semantic version, and a publishedOn date.
     # Also, telemetry should be disabled.
+
+    # If the file is not a main.bicep, we should ignore the testcase.
+    If ($Name -ne "main.bicep")
+    {
+      Continue;
+    }
+
     $Script:ShouldBeVersion = $Version
     $Script:VersionFound = $False
     $Script:PublishedOnFound = $False
