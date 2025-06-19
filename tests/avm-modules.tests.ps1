@@ -13,7 +13,7 @@ BeforeDiscovery {
   $BicepFiles | ForEach-Object {
     If ($_.Name -eq "main.bicep")
     {
-      $Script:MainTestCases += [HashTable] @{
+      $Script:MainTestCases += @{
         Name = $_.Name
         RelativePath = ($_.FullName -replace [RegEx]::Escape($PackagesRootPath + "\"), "") -replace [RegEx]::Escape($PackagesRootPath + "/"), ""
         Version = Split-Path -Path (Split-Path -Path $_.FullName -Parent) -Leaf
@@ -21,7 +21,7 @@ BeforeDiscovery {
       }
     }
 
-    $Script:TestCases += [HashTable] @{
+    $Script:TestCases += @{
       Name = $_.Name
       RelativePath = ($_.FullName -replace [RegEx]::Escape($PackagesRootPath + "\"), "") -replace [RegEx]::Escape($PackagesRootPath + "/"), ""
       Version = Split-Path -Path (Split-Path -Path $_.FullName -Parent) -Leaf
