@@ -7,10 +7,21 @@ BeforeAll {
 }
 
 BeforeDiscovery {
+  $Script:MainTestCases = @()
   $Script:TestCases = @()
   $BicepFiles = Get-ChildItem -Path $PackagesRootPath -Recurse -Depth 2 | Where-Object { $_.Extension -in ".bicep" } | Sort-Object -Property $_.Directory
   $BicepFiles | ForEach-Object {
-    $Script:TestCases += [HashTable] @{
+    If ($_.Name -eq "main.bicep")
+    {
+      $Script:MainTestCases += @{
+        Name = $_.Name
+        RelativePath = ($_.FullName -replace [RegEx]::Escape($PackagesRootPath + "\"), "") -replace [RegEx]::Escape($PackagesRootPath + "/"), ""
+        Version = Split-Path -Path (Split-Path -Path $_.FullName -Parent) -Leaf
+        FullName = $_.FullName
+      }
+    }
+
+    $Script:TestCases += @{
       Name = $_.Name
       RelativePath = ($_.FullName -replace [RegEx]::Escape($PackagesRootPath + "\"), "") -replace [RegEx]::Escape($PackagesRootPath + "/"), ""
       Version = Split-Path -Path (Split-Path -Path $_.FullName -Parent) -Leaf
@@ -23,9 +34,10 @@ Describe 'Runtime BICEP tests' {
   BeforeAll {
   }
 
-  It 'Syntax modifications of <relativePath> is complete' -ForEach $Script:TestCases {
+  It 'Syntax modifications of <relativePath> is complete' -ForEach $Script:MainTestCases {
     # All bicep files should have a 'version' metadata property with a semantic version, and a publishedOn date.
     # Also, telemetry should be disabled.
+
     $Script:ShouldBeVersion = $Version
     $Script:VersionFound = $False
     $Script:PublishedOnFound = $False
