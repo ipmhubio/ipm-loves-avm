@@ -7,6 +7,7 @@ BeforeAll {
 }
 
 BeforeDiscovery {
+  $Script:MainTestCases = @()
   $Script:TestCases = @()
   $BicepFiles = Get-ChildItem -Path $PackagesRootPath -Recurse -Depth 2 | Where-Object { $_.Extension -in ".bicep" } | Sort-Object -Property $_.Directory
   $BicepFiles | ForEach-Object {
