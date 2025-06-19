@@ -126,6 +126,10 @@
     {
       "search": "security-insights-data-connectors",
       "replacement": "security-insights-data-connect"
+    },
+    {
+      "search": "hybrid-container-service-provisioned-cluster-instance",
+      "replacement": "hybrid-cluster-instance"
     }
   ]
 }
