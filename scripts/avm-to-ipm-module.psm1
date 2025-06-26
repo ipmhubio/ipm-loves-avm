@@ -1173,7 +1173,7 @@ Function Get-AvmBuildPublishSet
   $UniquePackages = [Array] ($BuildResults.Modules | ForEach-Object { [PsCustomObject] @{ Name = $_.IpmHubName; Description = $_.Description }}) ?? @()
 
   # 02. Traverse the build folder to look for packages to publish
-  $ToPublish = Get-ChildItem -Path $AvmPackageBuildRoot -Recurse -Depth 1 | Where-Object { $_.Name -match "\d+\.\d+\.\d+" } | ForEach-Object {
+  $ToPublish = Get-ChildItem -Path $AvmPackageBuildRoot -Recurse -Depth 1 -Directory | Where-Object { $_.Name -match "\d+\.\d+\.\d+" } | ForEach-Object {
     $ToPublishRoot = $_
     $Name = Split-Path -Path (Split-Path -Path $ToPublishRoot.FullName -Parent) -Leaf
     $IpmHubJsonPath = Join-Path -Path $ToPublishRoot.FullName -ChildPath "ipmhub.json"
