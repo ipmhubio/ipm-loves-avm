@@ -134,6 +134,10 @@
     {
       "search": "microsoft-entra-domain-services",
       "replacement": "entra-domain-services"
+    },
+    {
+      "search": "resource-scoped-role-assignment",
+      "replacement": "resource-role-assignment"
     }
   ]
 }
