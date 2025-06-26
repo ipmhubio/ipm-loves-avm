@@ -42,6 +42,13 @@ jobs:
       run: |
         curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
       shell: pwsh
+
+    - name: Download and install IPM binary
+      run: |
+        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.11.0/ipm-linux-x64-full.tar.gz
+        sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
+        rm /tmp/ipm.tar.gz
+        sudo chmod +x /usr/local/bin/ipm
       
     - name: Prepare the AVM modules to become IPMHub acceptable
       id: build
@@ -50,8 +57,10 @@ jobs:
         $LastState = Get-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN"
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
+        $AvmPackagePublishRoot = Join-Path -Path (Get-Location.Path) -ChildPath "build-publish"
         & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.TilCommitId -FailOnNonBuildableModule
-
+        & ./src/scripts/prepare-publish.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackagePublishRoot $AvmPackagePublishRoot
+        
         $NumberOfPackages = ([Array](Get-ChildItem -Path $AvmPackageBuildRoot -Directory) ?? @()).Count
         echo ("numberOfPackages={0}" -f $NumberOfPackages) >> $env:GITHUB_OUTPUT
       shell: pwsh
@@ -62,7 +71,7 @@ jobs:
       id: test
       if: ${{ github.event.inputs.skipTests == 'false' || github.event.inputs.skipTests == null }}
       run: |
-        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
+        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-publish"
         $TestRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-tests"
         & ./src/scripts/prepare-tests.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -TestRootPath $TestRoot
         & ./src/scripts/run-tests.ps1 -TestRootPath $TestRoot
@@ -76,7 +85,7 @@ jobs:
       continue-on-error: true
 
     - name: Zip build output before storing as an artifact
-      run: zip buildresults.zip ./build/* -r -x "*/packages/*"
+      run: zip buildresults.zip ./build-publish/* -r -x "*/packages/*"
 
     - name: Publish IPMHub packages archive as an artifact
       uses: actions/upload-artifact@v4
@@ -114,7 +123,7 @@ jobs:
 
     - name: Download and install IPM binary
       run: |
-        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.9.0/ipm-linux-x64-full.tar.gz
+        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.11.0/ipm-linux-x64-full.tar.gz
         sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
         rm /tmp/ipm.tar.gz
         sudo chmod +x /usr/local/bin/ipm
@@ -122,7 +131,7 @@ jobs:
     - name: Publish all packages to IPMHub if required
       id: publish
       run: |
-        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
+        $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-publish"
         & ./src/scripts/publish-creation.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -PackageCreationApi $env:PACKAGE_CREATION_API
       shell: pwsh
       env:
@@ -138,7 +147,7 @@ jobs:
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
 
         # Read the last commit info from the results
-        $BuildResultFilePath = Join-Path -Path "build" -ChildPath "results.json"
+        $BuildResultFilePath = Join-Path -Path "build-publish" -ChildPath "results.json"
         $BuildResult = Get-Content -Path $BuildResultFilePath -Raw -Encoding "UTF8" | ConvertFrom-Json -Depth 10
         Set-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN" -FromCommitId $BuildResult.FromCommit -TilCommitId $BuildResult.TilCommit
       shell: pwsh
