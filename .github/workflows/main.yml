@@ -59,7 +59,7 @@ jobs:
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $AvmPackagePublishRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-publish"
         & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.TilCommitId -FailOnNonBuildableModule
-        & ./src/scripts/prepare-publish.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackagePublishRoot $AvmPackagePublishRoot
+        & ./src/scripts/prepare-publish.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -AvmPackagePublishRoot $AvmPackagePublishRoot
 
         $NumberOfPackages = ([Array](Get-ChildItem -Path $AvmPackageBuildRoot -Directory) ?? @()).Count
         echo ("numberOfPackages={0}" -f $NumberOfPackages) >> $env:GITHUB_OUTPUT
