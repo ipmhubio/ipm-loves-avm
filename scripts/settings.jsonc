@@ -130,6 +130,10 @@
     {
       "search": "hybrid-container-service-provisioned-cluster-instance",
       "replacement": "hybrid-cluster-instance"
+    },
+    {
+      "search": "microsoft-entra-domain-services",
+      "replacement": "entra-domain-services"
     }
   ]
 }
