@@ -166,6 +166,16 @@ jobs:
       with:
         path: src
 
+    - name: Notify on BUILD Failure
+      if: ${{ needs.build.result == 'failure' }}
+      run: |
+        Import-Module ./src/scripts/avm-to-ipm-module.psm1
+        $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
+        Send-MicrosoftTeamsChannelMessage -TeamsWebhookUri "${{ secrets.TEAMS_WEBHOOK_URL }}" -Title "AVM BICEP build failed." -Text ("The last build of AVM Bicep modules failed. Please check the last GIT workflow run: {0}." -f $GitHubRunUri) -MessageType "Critical"
+      shell: pwsh
+      env:
+        TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
+
     - name: Notify on TESTS Failure
       if: ${{ needs.build.outputs.testsOutcome == 'failure' }}
       run: |
@@ -199,7 +209,7 @@ jobs:
         TEAMS_TOKEN: ${{ secrets.TEAMS_WEBHOOK_URL }}
 
     - name: Notify on nothing to publish
-      if: ${{ needs.build.outputs.packagesBuildOutcome < 1 && (needs.publish.result == 'success' || needs.publish.result == 'skipped') }}
+      if: ${{ needs.build.result == 'success' && needs.build.outputs.packagesBuildOutcome < 1 && (needs.publish.result == 'success' || needs.publish.result == 'skipped') }}
       run: |
         Import-Module ./src/scripts/avm-to-ipm-module.psm1
         $GitHubRunUri = "https://github.com/{0}/actions/runs/{1}" -f $env:GITHUB_REPOSITORY, $env:GITHUB_RUN_ID
