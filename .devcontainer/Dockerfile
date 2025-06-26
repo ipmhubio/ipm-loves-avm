@@ -35,17 +35,20 @@ RUN \
   mkdir -p /workingfolder && chmod 777 /workingfolder && \
   mkdir -p /workingfolder/avm && chmod 777 /workingfolder/avm && \
   mkdir -p /workingfolder/build && chmod 777 /workingfolder/build && \
+  mkdir -p /workingfolder/build-publish && chmod 777 /workingfolder/build-publish && \
   mkdir -p /workingfolder/build-tests && chmod 777 /workingfolder/build-tests
 
 RUN git config --global --add safe.directory /workingfolder/avm
 RUN git config --global --add safe.directory /workingfolder/build
+RUN git config --global --add safe.directory /workingfolder/build-publish
 
 VOLUME [ "/workingfolder/src" ]
 
 COPY entrypoint.sh /entrypoint.sh
 COPY run-build.sh /run-build.sh
+COPY run-publish.sh /run-publish.sh
 COPY run-build-tests.sh /run-build-tests.sh
-RUN chmod +x /entrypoint.sh /run-build.sh /run-build-tests.sh && dos2unix /run-build.sh && dos2unix /run-build-tests.sh
+RUN chmod +x /entrypoint.sh /run-build.sh /run-build-publish.sh /run-build-tests.sh && dos2unix /run-build.sh && dos2unix /run-build-publish.sh && dos2unix /run-build-tests.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 

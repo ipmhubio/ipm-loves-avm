@@ -374,11 +374,11 @@ Function Get-AvmModuleMetadata
   )
 
   $AvmResFolderRoot = Join-Path $AvmRootFolder -ChildPath "res"
-  # $AvmPtnFolderRoot = Join-Path $AvmRootFolder -ChildPath "ptn"
+  $AvmPtnFolderRoot = Join-Path $AvmRootFolder -ChildPath "ptn"
   $AvmUtlFolderRoot = Join-Path $AvmRootFolder -ChildPath "utl"
 
   # 01. We first need to gather the list of published AVM modules from the current branch
-  $AvmPublishedModuleListLatest = Get-AvmGitRepositoryPublishedModules -ResourceModules -UtilityModules | Where-Object { $True -eq $_.IsLatest } | Select-Object -ExcludeProperty "IsLatest"
+  $AvmPublishedModuleListLatest = Get-AvmGitRepositoryPublishedModules -ResourceModules -UtilityModules -PatternModules | Where-Object { $True -eq $_.IsLatest } | Select-Object -ExcludeProperty "IsLatest"
 
   $Modules = [System.Collections.ArrayList]@()
   $Modules.Clear()
@@ -387,7 +387,7 @@ Function Get-AvmModuleMetadata
   $VersionFiles = @(
     Get-ChildItem -Path $AvmUtlFolderRoot -Filter "version.json" -Recurse
     Get-ChildItem -Path $AvmResfolderRoot -Filter "version.json" -Recurse
-    # Get-ChildItem -Path $AvmPtnFolderRoot -Filter "version.json" -Recurse
+    Get-ChildItem -Path $AvmPtnFolderRoot -Filter "version.json" -Recurse
   )
 
   ForEach($VersionFile in $VersionFiles)

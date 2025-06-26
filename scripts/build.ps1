@@ -169,10 +169,11 @@ If ($ReferencedModulesToRetrieve.Count -gt 0)
     "Retrieving referenced module '{0}' version '{1}'..." -f $RefModule.Name, $RefModule.Version | Write-Host -ForegroundColor "DarkGray"
     "Switching local repo to tag '{0}'..." -f $RefModule.Tag | Write-Host -ForegroundColor "DarkYellow"
     & git checkout $RefModule.Tag > $null 2>&1
-    $RefModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $RefModule.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
+    $RefModuleMetadata = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -PatternModules -FilterByPublicName $RefModule.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
 
     "Building referenced module '{0}' version '{1}'..." -f $RefModule.Name, $RefModule.Version | Write-Host -ForegroundColor "DarkGray"
     $RefModuleChild = $RefModuleMetadata.Modules | Select-Object -First 1
+
     Copy-AvmModuleForBuild `
       -AvmModule $RefModuleChild `
       -BuildRoot $AvmPackageBuildRoot `
