@@ -49,7 +49,7 @@ jobs:
         sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
         rm /tmp/ipm.tar.gz
         sudo chmod +x /usr/local/bin/ipm
-      
+
     - name: Prepare the AVM modules to become IPMHub acceptable
       id: build
       run: |
@@ -57,10 +57,10 @@ jobs:
         $LastState = Get-AvmBicepPublishState -SasTokenFromEnvironmentVariable "STATE_SAS_TOKEN"
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
-        $AvmPackagePublishRoot = Join-Path -Path (Get-Location.Path) -ChildPath "build-publish"
+        $AvmPackagePublishRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-publish"
         & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.TilCommitId -FailOnNonBuildableModule
         & ./src/scripts/prepare-publish.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackagePublishRoot $AvmPackagePublishRoot
-        
+
         $NumberOfPackages = ([Array](Get-ChildItem -Path $AvmPackageBuildRoot -Directory) ?? @()).Count
         echo ("numberOfPackages={0}" -f $NumberOfPackages) >> $env:GITHUB_OUTPUT
       shell: pwsh
