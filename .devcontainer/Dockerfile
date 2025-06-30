@@ -46,7 +46,7 @@ VOLUME [ "/workingfolder/src" ]
 
 COPY entrypoint.sh /entrypoint.sh
 COPY run-build.sh /run-build.sh
-COPY run-publish.sh /run-publish.sh
+COPY run-build-publish.sh /run-build-publish.sh
 COPY run-build-tests.sh /run-build-tests.sh
 RUN chmod +x /entrypoint.sh /run-build.sh /run-build-publish.sh /run-build-tests.sh && dos2unix /run-build.sh && dos2unix /run-build-publish.sh && dos2unix /run-build-tests.sh
 

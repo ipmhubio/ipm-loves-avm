@@ -3,6 +3,10 @@
     {
       "name": "devtest-labs",
       "version": "all"
+    },
+    {
+      "name": "dev-center",
+      "version": "0.0.1"
     }
   ],
   "nameReplacementments": [

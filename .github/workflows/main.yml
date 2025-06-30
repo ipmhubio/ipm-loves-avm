@@ -58,6 +58,8 @@ jobs:
         $AvmRepositoryRootPath = Join-Path -Path (Get-Location).Path -ChildPath "avm"
         $AvmPackageBuildRoot = Join-Path -Path (Get-Location).Path -ChildPath "build"
         $AvmPackagePublishRoot = Join-Path -Path (Get-Location).Path -ChildPath "build-publish"
+
+        "Retrieving all changes within the Bicep AVM repository from commit '{0}'..." -f $LastState.TilCommitId | Write-Host
         & ./src/scripts/build.ps1 -AvmRepositoryRootPath $AvmRepositoryRootPath -AvmPackageBuildRoot $AvmPackageBuildRoot -FromCommit $LastState.TilCommitId -FailOnNonBuildableModule
         & ./src/scripts/prepare-publish.ps1 -AvmPackageBuildRoot $AvmPackageBuildRoot -AvmPackagePublishRoot $AvmPackagePublishRoot
 
