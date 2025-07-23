@@ -142,6 +142,10 @@
     {
       "search": "resource-scoped-role-assignment",
       "replacement": "resource-role-assignment"
+    },
+    {
+      "search": "stack-hci-virtual-machine-instance",
+      "replacement": "stack-hci-virtual-machine-inst"
     }
   ]
 }
