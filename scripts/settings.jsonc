@@ -114,7 +114,6 @@
       "search": "healthcare-api-avd-workspaces",
       "replacement": "healthcare-api-workspaces"
     },
-
     {
       "search": "machine-learning-avd-workspace",
       "replacement": "machine-learning-workspace"
@@ -146,6 +145,10 @@
     {
       "search": "stack-hci-virtual-machine-instance",
       "replacement": "stack-hci-virtual-machine-inst"
+    },
+    {
+      "search": "compute-capacityreservationgroup",
+      "replacement": "compute-capacityreservationgrp"
     }
   ]
 }
