@@ -67,6 +67,10 @@
     {
       "search": "cosmos-db-for-mongodb-vcore-cluster",
       "replacement": "cosmos-mongo-vcore-cluster"
+    },
+    {
+      "search": "compute-capacityreservationgroup",
+      "replacement": "compute-capacityreservationgrp"
     }
   ]
 }
