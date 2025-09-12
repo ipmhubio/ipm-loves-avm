@@ -17,7 +17,7 @@ jobs:
       - name: Install IPM CLI
         shell: bash
         run: |
-            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.12.0/ipm-linux-x64-full.tar.gz"
             tar -xzf ipm-cli.tar.gz
             sudo mv ./ipm /usr/local/bin/ipm
       - name: Run Download Script
@@ -71,7 +71,7 @@ jobs:
       - name: Install IPM CLI
         shell: bash
         run: |
-            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.12.0/ipm-linux-x64-full.tar.gz"
             tar -xzf ipm-cli.tar.gz
             sudo mv ./ipm /usr/local/bin/ipm
 
@@ -120,7 +120,7 @@ jobs:
       - name: Install IPM CLI
         shell: bash
         run: |
-            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.7.0/ipm-linux-x64-full.tar.gz"
+            curl -Lo ipm-cli.tar.gz "https://github.com/ipmhubio/ipm/releases/download/0.12.0/ipm-linux-x64-full.tar.gz"
             tar -xzf ipm-cli.tar.gz
             sudo mv ./ipm /usr/local/bin/ipm
 
