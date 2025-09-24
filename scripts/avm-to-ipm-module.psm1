@@ -826,9 +826,9 @@ Function Copy-AvmModuleForBuild
     $Message | Write-Warning
   }
 
-  If ($AvmModule.IpmHubName.Length -gt 30)
+  If ($AvmModule.IpmHubName.Length -gt 64)
   {
-    FailOrWarning("Cannot build package '{0}'. Its name size exceeds 30 characters. AVM name: '{1}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName)
+    FailOrWarning("Cannot build package '{0}'. Its name size exceeds 64 characters. AVM name: '{1}'." -f $AvmModule.IpmHubName, $AvmModule.AcrName)
     Return
   }
 
