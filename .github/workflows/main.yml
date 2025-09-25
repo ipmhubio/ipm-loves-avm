@@ -45,7 +45,7 @@ jobs:
 
     - name: Download and install IPM binary
       run: |
-        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.12.0/ipm-linux-x64-full.tar.gz
+        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.13.0/ipm-linux-x64-full.tar.gz
         sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
         rm /tmp/ipm.tar.gz
         sudo chmod +x /usr/local/bin/ipm
@@ -125,7 +125,7 @@ jobs:
 
     - name: Download and install IPM binary
       run: |
-        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.12.0/ipm-linux-x64-full.tar.gz
+        curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/download/0.13.0/ipm-linux-x64-full.tar.gz
         sudo tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin
         rm /tmp/ipm.tar.gz
         sudo chmod +x /usr/local/bin/ipm
