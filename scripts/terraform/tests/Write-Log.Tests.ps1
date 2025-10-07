@@ -12,7 +12,8 @@ Describe "Write-Log" -Tag "Unit" {
     Context "Basic logging functionality" {
         BeforeEach {
             # Clean up any existing test log files
-            if (Test-Path $TestLogDir) {
+            if (Test-Path $TestLogDir)
+            {
                 Remove-Item $TestLogDir -Recurse -Force
             }
         }
@@ -57,7 +58,8 @@ Describe "Write-Log" -Tag "Unit" {
 
     Context "Log level handling" {
         BeforeEach {
-            if (Test-Path $TestLogDir) {
+            if (Test-Path $TestLogDir)
+            {
                 Remove-Item $TestLogDir -Recurse -Force
             }
         }
@@ -91,7 +93,8 @@ Describe "Write-Log" -Tag "Unit" {
 
     Context "Log message formatting" {
         BeforeEach {
-            if (Test-Path $TestLogDir) {
+            if (Test-Path $TestLogDir)
+            {
                 Remove-Item $TestLogDir -Recurse -Force
             }
         }
@@ -139,7 +142,8 @@ Describe "Write-Log" -Tag "Unit" {
 
     Context "Error handling" {
         BeforeEach {
-            if (Test-Path $TestLogDir) {
+            if (Test-Path $TestLogDir)
+            {
                 Remove-Item $TestLogDir -Recurse -Force
             }
         }
@@ -195,7 +199,8 @@ Describe "Write-Log" -Tag "Unit" {
 
     Context "Call stack information" {
         It "Should correctly identify caller information" {
-            function Test-CallerFunction {
+            function Test-CallerFunction
+            {
                 Write-Log -Message "Called from function" -LogPath $TestLogPath
             }
 
@@ -224,7 +229,8 @@ Describe "Write-Log" -Tag "Unit" {
 
     Context "Performance and edge cases" {
         BeforeEach {
-            if (Test-Path $TestLogDir) {
+            if (Test-Path $TestLogDir)
+            {
                 Remove-Item $TestLogDir -Recurse -Force
             }
         }
@@ -252,5 +258,4 @@ Describe "Write-Log" -Tag "Unit" {
             { Write-Log -Message "Relative path test" -LogPath $RelativePath } | Should -Not -Throw
         }
     }
-}
 }

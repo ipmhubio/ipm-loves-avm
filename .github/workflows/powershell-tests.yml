@@ -48,12 +48,6 @@ jobs:
         Write-Host "Running all tests..."
         .\Run-Tests.ps1
 
-    - name: Run Convert-PackageName Tests
-      shell: pwsh
-      working-directory: scripts/terraform/tests
-      run: |
-        Write-Host "Running Convert-PackageName specific tests..."
-        .\Run-Tests.ps1 -TestName "Convert-PackageName.Tests.ps1"
 
     - name: Run Tests with Code Coverage
       shell: pwsh
