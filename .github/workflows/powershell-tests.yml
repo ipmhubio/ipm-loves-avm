@@ -21,8 +21,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup PowerShell
-      uses: actions/setup-powershell@v1
+    - name: Verify PowerShell is available
+      shell: pwsh
+      run: |
+        Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
+        Write-Host "Platform: $($PSVersionTable.Platform)"
 
     - name: Install Pester
       shell: pwsh
@@ -74,7 +77,7 @@ jobs:
         path: |
           scripts/terraform/tests/TestResults.junit.xml
           scripts/terraform/tests/CodeCoverage.xml
-        retention-days: 30
+        retention-days: 2
 
     - name: Publish Test Results
       uses: dorny/test-reporter@v1
