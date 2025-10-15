@@ -1,0 +1,116 @@
+name: PowerShell Module Tests
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/terraform/**'
+      - '!scripts/terraform/logs/**'
+      - '!scripts/terraform/staging/**'
+  push:
+    paths:
+      - 'scripts/terraform/**'
+      - '!scripts/terraform/logs/**'
+      - '!scripts/terraform/staging/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Run PowerShell Tests
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Verify PowerShell is available
+      shell: pwsh
+      run: |
+        Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
+        Write-Host "Platform: $($PSVersionTable.Platform)"
+
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Write-Host "Installing Pester module..."
+        Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+        Write-Host "Pester version: $((Get-Module Pester -ListAvailable).Version)"
+
+    - name: Validate Test Environment
+      shell: pwsh
+      working-directory: scripts/terraform/tests
+      run: |
+        Write-Host "Validating test environment..."
+        .\Validate-TestEnvironment.ps1
+
+    - name: Run All Tests
+      shell: pwsh
+      working-directory: scripts/terraform/tests
+      run: |
+        Write-Host "Running all tests..."
+        .\Run-Tests.ps1
+
+
+    - name: Run Tests with Code Coverage
+      shell: pwsh
+      working-directory: scripts/terraform/tests
+      run: |
+        Write-Host "Running tests with code coverage..."
+        .\Run-Tests.ps1 -CodeCoverage $true
+
+    - name: Run CI Tests with JUnit Output
+      shell: pwsh
+      working-directory: scripts/terraform/tests
+      run: |
+        Write-Host "Running CI tests with JUnit output..."
+        .\Run-Tests.ps1 -CI $true -OutputFormat "JUnitXml"
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          scripts/terraform/tests/TestResults.junit.xml
+          scripts/terraform/tests/CodeCoverage.xml
+        retention-days: 2
+
+    - name: Upload Code Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        file: scripts/terraform/tests/CodeCoverage.xml
+        flags: powershell
+        name: PowerShell Module Coverage
+        fail_ci_if_error: false
+
+
+  test-windows:
+    runs-on: windows-latest
+    name: Run PowerShell Tests (Windows)
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Pester
+      shell: pwsh
+      run: |
+        Write-Host "Installing Pester module..."
+        Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+        Write-Host "Pester version: $((Get-Module Pester -ListAvailable).Version)"
+
+    - name: Run All Tests (Windows)
+      shell: pwsh
+      working-directory: scripts/terraform/tests
+      run: |
+        Write-Host "Running all tests on Windows..."
+        .\Run-Tests.ps1 -CI $true -OutputFormat "JUnitXml"
+
+    - name: Upload Windows Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-windows
+        path: |
+          scripts/terraform/tests/TestResults.junit.xml
+          scripts/terraform/tests/CodeCoverage.xml
+        retention-days: 30

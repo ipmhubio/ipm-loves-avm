@@ -12,26 +12,32 @@ function New-IpmPackageName
   $ipmName = $TerraformName -replace "terraform-azurerm-avm-res-", ""
   $ipmName = $ipmName -replace "terraform-avm-azurerm-res-", ""
 
-  # Additional transformations can be added here if needed
-  # For example, replacing hyphens with underscores, etc.
+  # Check if name is longer than 30 characters (for backward compatibility)
   if ($ipmName.Length -gt 30)
   {
-    Write-Log "Package name $ipmName is more than 30 characters. Trimming to 30 characters." -Level "INFO"
+    Write-Log "Package name $ipmName is more than 30 characters. Checking for existing conversion." -Level "INFO"
     $convertedPackageName = Convert-PackageName -PackageName $ipmName
-    if ($convertedPackageName -eq $false)
+    if ($convertedPackageName -ne $false)
     {
-      Write-Log "Failed to convert package name $ipmName to a valid IPM name." -Level "ERROR"
-      throw "Failed to convert package name $ipmName to a valid IPM name."
+      # Use existing conversion for backward compatibility
+      $ipmName = $convertedPackageName
+      Write-Log "Used existing conversion: Terraform name '$TerraformName' to IPM name '$ipmName'" -Level "INFO"
+      return $ipmName
     }
     else
     {
-      $ipmName = $convertedPackageName
+      # No existing conversion found, check if it exceeds new 64-character limit
+      if ($ipmName.Length -gt 64)
+      {
+        Write-Log "Package name $ipmName is more than 64 characters and no conversion exists." -Level "ERROR"
+        throw "Package name $ipmName is more than 64 characters and no conversion exists in settings.jsonc."
+      }
+      else
+      {
+        Write-Log "Package name $ipmName is between 30-64 characters, using as-is since no existing conversion found." -Level "INFO"
+      }
     }
-    $ipmName = $convertedPackageName
-    Write-Log "Converted Terraform name '$TerraformName' to IPM name '$ipmName'" -Level "INFO"
-    return $ipmName
   }
-
 
   return $ipmName
 }

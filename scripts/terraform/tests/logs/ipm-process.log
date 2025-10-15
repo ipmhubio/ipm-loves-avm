@@ -1,0 +1,190 @@
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:35:52] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:35:52] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:35:52] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 08:35:52] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name very-long-package-name-very-long-package-name-very-long-package-name-very-long-package-name- is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:35:52] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name very-long-package-name-very-long-package-name-very-long-package-name-very-long-package-name- is more than 64 characters and no conversion exists.
+[2025-10-07 08:36:02] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:36:02] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:36:02] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:36:02] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:00] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:00] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:00] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:00] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 08:41:08] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:08] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:08] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:08] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:08] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:08] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 08:41:27] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 08:41:27] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'compute-proximityplacementgroup' to 'compute-prox-placement-group'
+[2025-10-07 08:41:27] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'containerinstance-containergroup' to 'container-instance-group'
+[2025-10-07 08:41:27] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 08:41:27] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'AZURESTACKHCI-VIRTUALMACHINEINSTANCE' to 'azurestackhci-vm-instance'
+[2025-10-07 08:41:27] [ERROR]   [Convert-PackageName.ps1 : 14] Settings file not found at path: /private/tmp/7b6db2f4-dcf4-4a63-a99b-1d7180f2dbfa/non-existent-settings.jsonc
+[2025-10-07 08:41:27] [ERROR]   [Convert-PackageName.ps1 : 43] Error processing name mapping: Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: j. Path '', line 1, position 10.
+[2025-10-07 08:41:27] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 08:41:38] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package' to 'first-replacement'
+[2025-10-07 08:41:38] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package_with.special-chars' to 'converted-package'
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 08:41:38] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 08:41:38] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'compute-proximityplacementgroup' to 'compute-prox-placement-group'
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'containerinstance-containergroup' to 'container-instance-group'
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'AZURESTACKHCI-VIRTUALMACHINEINSTANCE' to 'azurestackhci-vm-instance'
+[2025-10-07 10:26:06] [ERROR]   [Convert-PackageName.ps1 : 14] Settings file not found at path: /private/tmp/8e7f59ef-2d6b-4675-9675-e1f261a4950d/non-existent-settings.jsonc
+[2025-10-07 10:26:06] [ERROR]   [Convert-PackageName.ps1 : 43] Error processing name mapping: Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: j. Path '', line 1, position 10.
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package' to 'first-replacement'
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package_with.special-chars' to 'converted-package'
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 10:26:06] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 10:26:06] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'compute-proximityplacementgroup' to 'compute-prox-placement-group'
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'containerinstance-containergroup' to 'container-instance-group'
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'AZURESTACKHCI-VIRTUALMACHINEINSTANCE' to 'azurestackhci-vm-instance'
+[2025-10-07 11:27:32] [ERROR]   [Convert-PackageName.ps1 : 14] Settings file not found at path: /private/tmp/cb724638-42a7-494b-a164-13a0824f659c/non-existent-settings.jsonc
+[2025-10-07 11:27:32] [ERROR]   [Convert-PackageName.ps1 : 43] Error processing name mapping: Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: j. Path '', line 1, position 10.
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package' to 'first-replacement'
+[2025-10-07 11:27:32] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package_with.special-chars' to 'converted-package'
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:27:33] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:27:33] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'compute-proximityplacementgroup' to 'compute-prox-placement-group'
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'containerinstance-containergroup' to 'container-instance-group'
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'AZURESTACKHCI-VIRTUALMACHINEINSTANCE' to 'azurestackhci-vm-instance'
+[2025-10-07 11:29:05] [ERROR]   [Convert-PackageName.ps1 : 14] Settings file not found at path: /private/tmp/e3e6b34e-38dd-4349-bf9c-685b7ddac272/non-existent-settings.jsonc
+[2025-10-07 11:29:05] [ERROR]   [Convert-PackageName.ps1 : 43] Error processing name mapping: Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: j. Path '', line 1, position 10.
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package' to 'first-replacement'
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package_with.special-chars' to 'converted-package'
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:29:05] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:29:05] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'compute-proximityplacementgroup' to 'compute-prox-placement-group'
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'containerinstance-containergroup' to 'container-instance-group'
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'AZURESTACKHCI-VIRTUALMACHINEINSTANCE' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:18] [ERROR]   [Convert-PackageName.ps1 : 14] Settings file not found at path: /private/tmp/fefffe48-a9d0-4a3e-a36e-b00efe246c7e/non-existent-settings.jsonc
+[2025-10-07 11:32:18] [ERROR]   [Convert-PackageName.ps1 : 43] Error processing name mapping: Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: j. Path '', line 1, position 10.
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package' to 'first-replacement'
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package_with.special-chars' to 'converted-package'
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:32:18] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:18] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'compute-proximityplacementgroup' to 'compute-prox-placement-group'
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'containerinstance-containergroup' to 'container-instance-group'
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'AZURESTACKHCI-VIRTUALMACHINEINSTANCE' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:40] [ERROR]   [Convert-PackageName.ps1 : 14] Settings file not found at path: /private/tmp/d64c79a1-f8cf-48e7-9972-7ffa2a45fb09/non-existent-settings.jsonc
+[2025-10-07 11:32:40] [ERROR]   [Convert-PackageName.ps1 : 43] Error processing name mapping: Conversion from JSON failed with error: Invalid character after parsing property name. Expected ':' but got: j. Path '', line 1, position 10.
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package' to 'first-replacement'
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'test-package_with.special-chars' to 'converted-package'
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name maintenance-maintenanceconfiguration is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'maintenance-maintenanceconfiguration' to 'maintenanceconfiguration'
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-maintenance-maintenanceconfiguration' to IPM name 'maintenanceconfiguration'
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name azurestackhci-virtualmachineinstance is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [INFO]    [Convert-PackageName.ps1 : 30] Converted package name 'azurestackhci-virtualmachineinstance' to 'azurestackhci-vm-instance'
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 24]  Used existing conversion: Terraform name 'terraform-azurerm-avm-res-azurestackhci-virtualmachineinstance' to IPM name 'azurestackhci-vm-instance'
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name some-very-long-package-name-here is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name some-very-long-package-name-here is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 37]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is between 30-64 characters, using as-is since no existing conversion found.
+[2025-10-07 11:32:40] [INFO]    [New-IpmPackageName.ps1 : 18]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 30 characters. Checking for existing conversion.
+[2025-10-07 11:32:40] [ERROR]   [New-IpmPackageName.ps1 : 32]  Package name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa is more than 64 characters and no conversion exists.
