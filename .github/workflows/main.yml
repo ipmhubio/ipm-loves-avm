@@ -47,12 +47,6 @@ jobs:
       with:
         version: '0.13.0'
 
-    - name: Download and install IPM binary
-      id: prep_ipm
-      uses: ipmhubio/ipm-actions/.github/actions/prep-ipm@v1
-      with:
-        version: '0.13.0'
-
     - name: Prepare the AVM modules to become IPMHub acceptable
       id: build
       run: |
