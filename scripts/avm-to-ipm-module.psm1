@@ -136,13 +136,13 @@ Function Get-AvmGitRepositoryPublishedModules
   )
 
   # 01. Get a list of all tags that indicate a published module, specific on the current branch/tag.
-  $AvmPublishedModuleList = (& git tag --merged) `
-  | Where-Object {
+  $AvmPublishedModuleList = [Array] (& git tag --points-at HEAD) ?? @()
+  $AvmPublishedModuleList = $AvmPublishedModuleList | Where-Object {
     ($ResourceModules.IsPresent -and $True -eq $ResourceModules -and $_.StartsWith("avm/res/")) -or
     ($PatternModules.IsPresent -and $True -eq $PatternModules -and $_.StartsWith("avm/ptn/")) -or
     ($UtilityModules.IsPresent -and $True -eq $UtilityModules -and $_.StartsWith("avm/utl/"))
-  } `
-  | ForEach-Object {
+  }
+  $AvmPublishedModuleList = $AvmPublishedModuleList | ForEach-Object {
     $Parts = $_ -split "/"
     $Name = ($Parts | Select-Object -Skip 2 | Select-Object -SkipLast 1) -join "/"
     $Version = $Parts | Select-Object -Last 1
@@ -436,12 +436,17 @@ Function Get-AvmModuleMetadata
     $BicepFileContent = Get-Content -Path $BicepFile -Encoding "UTF8" | Select-Object -First 20
 
     # Read metadata from README
-    $ReadmeFileContent = Get-Content -Path $ReadmeFile -Encoding "UTF8" | Select-Object -First 50
+    $ReadmeFileContent = Get-Content -Path $ReadmeFile -Encoding "UTF8" | Select-Object -First 200
     $ReadmeModuleAzureType = "unknown"
     $ReadmeModuleClassification = "unknown"
     $ReadmePublicBicepRegistryIdentification = "unknown"
     ForEach($Line in $ReadmeFileContent)
     {
+      If ($ReadmeModuleAzureType -ne "unknown" -and $ReadmeModuleClassification -ne "unknown" -and $ReadmePublicBicepRegistryIdentification -ne "unknown")
+      {
+        Break
+      }
+
       If ($Null -eq $Line -or $Line.Length -eq 0)
       {
         Continue
