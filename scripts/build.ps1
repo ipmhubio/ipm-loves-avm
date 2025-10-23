@@ -15,7 +15,7 @@ Param(
   [PsCustomObject[]] $AvmModulesToSkip = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).avmModulesToSkip),
 
   [Parameter(Mandatory = $False)]
-  [PsCustomObject[]] $IpmHubNameReplacements = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).nameReplacementments),
+  [PsCustomObject[]] $IpmHubNameReplacements = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).nameReplacements),
 
   [Parameter(Mandatory = $False)]
   [String] $FromCommit,

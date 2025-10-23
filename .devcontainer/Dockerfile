@@ -16,20 +16,16 @@ RUN \
   apt-get -y install ca-certificates curl apt-transport-https lsb-release gnupg curl unzip git dos2unix
 
 # Download & Install latest version of BICEP
-RUN curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
+RUN curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep-latest
+RUN curl -Lo bicep https://github.com/Azure/bicep/releases/download/v0.37.4/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
+
+# Install/Get IPM
+RUN curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.tar.gz && tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin && rm /tmp/ipm.tar.gz && chmod +x /usr/local/bin/ipm
 
 RUN \
   # Install PS modules from PSGallery (~500MB)
   pwsh -Command Set-PSRepository -Name "${PSREPOSITORY}" -InstallationPolicy "Trusted" && \
   pwsh -Command Install-Module -Name "Pester" -Scope "AllUsers" -AllowClobber -Repository "${PSREPOSITORY}"
-
-# Install/Get IPM
-RUN curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.tar.gz && tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin && rm /tmp/ipm.tar.gz && chmod +x /usr/local/bin/ipm
-
-# Get required powershell modules
-RUN \
-  pwsh -Command Set-PSRepository -Name "PSGallery" -InstallationPolicy "Trusted" && \
-  pwsh -Command Install-Module -Name "Pester" -Scope "AllUsers" -AllowClobber -Repository "PSGallery"
 
 RUN \
   mkdir -p /workingfolder && chmod 777 /workingfolder && \
