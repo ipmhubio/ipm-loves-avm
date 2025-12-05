@@ -156,6 +156,13 @@ try
                 $release.tag_name
             }
 
+            # Validate semver format (x.x.x only, no pre-release suffixes)
+            if ($version -notmatch '^\d+\.\d+\.\d+$')
+            {
+                Write-Log "Skipping $repoName version $version - not a standard semver format (x.x.x)" -Level "INFO"
+                continue
+            }
+
             # Check if this version is already processed
             Write-Log "Starting Get-PackageVersionState for package '$repoName' version '$version'" -Level "INFO"
             $existingState = Get-PackageVersionState -PackageName $repoName -Version $version -RunLocal:$RunLocal -SasTokenFromEnvironmentVariable "SAS_TOKEN_AVM_TF"
