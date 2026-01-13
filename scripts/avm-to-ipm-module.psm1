@@ -82,40 +82,42 @@ Function Get-AvmGitFutureCommitsWithTags
   # Use this date to retrieve the log of commits after that
   $NewerCommits = git log main --pretty=format:"%H %cd" --reverse --date=iso-strict --since="$CommitDate"
 
-  # Loop through this commit list and check if there is a git tag on it that we are interested in.
-  # The list if from older to newer.
-  ForEach ($Commit in $NewerCommits)
+  # Get all tags with their commit and date
+  $TagsInfo = git for-each-ref --sort=creatordate --format="%(refname:short) %(objectname) %(creatordate:iso-strict)" refs/tags
+  
+  # Filter these tags with only those that have a commit > our commit date.
+  $RelevantTagsInfo = $TagsInfo | Where-Object {
+    $Parts = $_ -split ' '
+    $TagDate = [datetime] $Parts[2]
+    $TagDate -gt [datetime]$CommitDate
+  }
+
+  ForEach ($TagLine in $RelevantTagsInfo) 
   {
-    $CommitParts = $Commit -split ' '
-    $CommitId = $CommitParts | Select-Object -First 1
-    $CommitDate = $CommitParts | Select-Object -Last 1
-    $Tag = git tag --points-at $CommitId 2>$null
-    If ($Null -ne $Tag)
-    {
-      If (-not($ResourceModules.IsPresent -and $True -eq $ResourceModules) -and $Tag.StartsWith("avm/res"))
-      {
-        Continue
-      }
+    $Parts = $TagLine -split ' '
+    $TagName = $Parts[0]
+    $CommitId = $Parts[1]
+    $TagDate = $Parts[2]
 
-      If (-not($PatternModules.IsPresent -and $True -eq $PatternModules) -and $Tag.StartsWith("avm/ptn"))
-      {
-        Continue
-      }
+    # Check if this commit is on the main branch
+    git merge-base --is-ancestor $CommitId main 2>$null
+    If ($LASTEXITCODE -ne 0) {
+      "Commit '{0}' is not available on main so it is skipped." -f $CommitId | Write-Host
+      Continue  # Skip tags not on main branch
+    }
 
-      If (-not($UtilityModules.IsPresent -and $True -eq $UtilityModules) -and $Tag.StartsWith("avm/utl"))
-      {
-        Continue
-      }
+    If (-not($ResourceModules.IsPresent -and $True -eq $ResourceModules) -and $TagName.StartsWith("avm/res")) { Continue }
+    If (-not($PatternModules.IsPresent -and $True -eq $PatternModules) -and $TagName.StartsWith("avm/ptn")) { Continue }
+    If (-not($UtilityModules.IsPresent -and $True -eq $UtilityModules) -and $TagName.StartsWith("avm/utl")) { Continue }
 
-      $TagParts = $Tag -split "/"
-      [PsCustomObject] @{
-        CommitId = $CommitId
-        Date = $CommitDate
-        Name = ($TagParts | Select-Object -Skip 2 | Select-Object -SkipLast 1) -join "/"
-        Version = $TagParts | Select-Object -Last 1
-        Classification = Get-AvmClassificationFromName -Name $Tag
-        TagName = $Tag
-      }
+    $TagParts = $TagName -split "/"
+    [PsCustomObject]@{
+      CommitId = $CommitId
+      Date = $TagDate
+      Name = ($TagParts | Select-Object -Skip 2 | Select-Object -SkipLast 1) -join "/"
+      Version = $TagParts | Select-Object -Last 1
+      Classification = Get-AvmClassificationFromName -Name $TagName
+      TagName = $TagName
     }
   }
 }
