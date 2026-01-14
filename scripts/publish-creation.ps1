@@ -16,7 +16,39 @@ $AvmBuildPublishSet = Get-AvmBuildPublishSet -AvmPackageBuildRoot $AvmPackageBui
 
 # 02. Ensure that all packages exist within the hub.
 "Ensuring that all packages exists within IPMHub..." | Write-Host
-$Res = Invoke-IpmHubPackageEnsurance -Packages $AvmBuildPublishSet.UniquePackages -PackageCreationApi $PackageCreationApi -Verbose:$VerbosePreference
+
+# An Azure Logic App has a maximum runtime ~ 2 minuten.
+# So if we have too many packagedata, we should break it up into chunks of 50.
+$Res = @()
+$ChunkSize = 50
+$UniquePackages = $AvmBuildPublishSet.UniquePackages
+
+If ($null -eq $UniquePackages -or $UniquePackages.Count -eq 0)
+{
+  $Res = @()
+} `
+ElseIf ($UniquePackages.Count -gt $ChunkSize)
+{
+  for ($Index = 0; $Index -lt $UniquePackages.Count; $Index += $ChunkSize)
+  {
+    $Take = [Math]::Min($ChunkSize, $UniquePackages.Count - $Index)
+    $Chunk = @($UniquePackages[$Index..($Index + $Take - 1)])
+
+    Write-Verbose ("Calling Invoke-IpmHubPackageEnsurance for chunk {0}-{1} of {2} (size: {3})" -f ($Index + 1), ($Index + $Take), $UniquePackages.Count, $Chunk.Count)
+
+    $ChunkRes = Invoke-IpmHubPackageEnsurance -Packages $Chunk -PackageCreationApi $PackageCreationApi -Verbose:$VerbosePreference
+    if ($null -ne $ChunkRes)
+    {
+      # Ensure array semantics even when a single object is returned
+      $Res += @($ChunkRes)
+    }
+  }
+} `
+Else
+{
+  $Res = Invoke-IpmHubPackageEnsurance -Packages $AvmBuildPublishSet.UniquePackages -PackageCreationApi $PackageCreationApi -Verbose:$VerbosePreference
+}
+
 $PackagesCreated = [Array] ($Res | Where-Object { $_.statusCode -eq 201 }) ?? @()
 $PackagesExists = [Array] ($Res | Where-Object { $_.statusCode -eq 200 }) ?? @()
 $PackagesFailed = [Array] ($Res | Where-Object { $_.statusCode -ge 400 }) ?? @()

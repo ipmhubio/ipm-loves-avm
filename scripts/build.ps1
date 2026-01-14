@@ -12,10 +12,10 @@ Param(
   [String] $IpmHubOrganizationName = "avm-bicep",
 
   [Parameter(Mandatory = $False)]
-  [PsCustomObject[]] $AvmModulesToSkip = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).avmModulesToSkip),
+  [PsCustomObject[]] $AvmModulesToSkip = @(),
 
   [Parameter(Mandatory = $False)]
-  [PsCustomObject[]] $IpmHubNameReplacements = $((Get-Content -Path (Join-Path -Path $PSScriptRoot -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json).nameReplacements),
+  [PsCustomObject[]] $IpmHubNameReplacements = @(),
 
   [Parameter(Mandatory = $False)]
   [String] $FromCommit,
@@ -25,6 +25,23 @@ Param(
 )
 
 $ScriptFolder = $PSScriptRoot
+If ([String]::IsNullOrEmpty($ScriptFolder))
+{
+  # Fallback to development / debugging paths.
+  $ScriptFolder = "/workingfolder/src/scripts/"; $AvmRepositoryRootPath = "/workingfolder/avm"; $AvmPackageBuildRoot = "/workingfolder/build";
+}
+
+$ScriptSettings = Get-Content -Path (Join-Path -Path $ScriptFolder -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json
+If (-not $PSBoundParameters.ContainsKey("AvmModulesToSkip")) 
+{
+  $AvmModulesToSkip = $ScriptSettings.avmModulesToSkip
+}
+
+If (-not $PSBoundParameters.ContainsKey("IpmHubNameReplacements"))
+{
+  $IpmHubNameReplacements = $ScriptSettings.nameReplacements
+}
+
 Import-Module (Join-Path -Path $ScriptFolder -ChildPath "avm-to-ipm-module.psm1") -Force
 $AvmSubFolder = Join-Path -Path $AvmRepositoryRootPath -ChildPath "avm"
 If (-not(Test-Path -Path $AvmSubFolder))

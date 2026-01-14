@@ -84,7 +84,7 @@ Function Get-AvmGitFutureCommitsWithTags
 
   # Get all tags with their commit and date
   $TagsInfo = git for-each-ref --sort=creatordate --format="%(refname:short) %(objectname) %(creatordate:iso-strict)" refs/tags
-  
+
   # Filter these tags with only those that have a commit > our commit date.
   $RelevantTagsInfo = $TagsInfo | Where-Object {
     $Parts = $_ -split ' '
@@ -92,7 +92,7 @@ Function Get-AvmGitFutureCommitsWithTags
     $TagDate -gt [datetime]$CommitDate
   }
 
-  ForEach ($TagLine in $RelevantTagsInfo) 
+  ForEach ($TagLine in $RelevantTagsInfo)
   {
     $Parts = $TagLine -split ' '
     $TagName = $Parts[0]
@@ -398,6 +398,7 @@ Function Get-AvmModuleMetadata
     $VersionInfo = Get-Content -Path $VersionFile -Raw -Encoding "UTF8" | ConvertFrom-Json
     $BicepFile = Join-Path -Path $ModuleRoot -ChildPath "main.bicep"
     $ReadmeFile = Join-Path -Path $ModuleRoot -ChildPath "README.md"
+    $ChangeLogFile = Join-Path -Path $ModuleRoot -ChildPath "CHANGELOG.md"
 
     # Which files should be included within the package?
     $ModuleFiles = (Search-RelevantModuleFiles -RootPath $ModuleRoot -IsRoot).ChildItems
@@ -468,8 +469,45 @@ Function Get-AvmModuleMetadata
       }
     }
 
+    # If we do not have a readme public bicep registry identification, we cannot proceed. This occurs in a small number of cases.
+    # So, we try to determine the public registry identification in a different way, but we don't make it to difficult.
+    $ChangeLogPublicBicepRegistryIdentification = "unknown"
+    $ChangeLogModuleClassification = "unknown"
+    If ([String]::IsNullOrEmpty($ReadmePublicBicepRegistryIdentification))
+    {
+      $ReadmePublicBicepRegistryIdentification = $Null
+      $ReadmeModuleClassification = $Null
+      $ChangeLogContent = Get-Content -Path $ChangeLogFile -Encoding "UTF8" | Select-Object -First 10
+      $ChangeLogPublicBicepRegistryIdentificationName = "unknown"
+      $ChangeLogVersion = "unknown"
+      ForEach($Line in $ChangeLogContent)
+      {
+        If ($line -match 'avm/(res|ptn|utl)/(.+?)(?=/CHANGELOG\.md)')
+        {
+          $ChangeLogModuleClassification = Get-AvmClassificationFromName -Name $Line
+          $ChangeLogPublicBicepRegistryIdentificationName = $Matches[2]
+        }
+
+        If ($Line -match '^\s*##\s+((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))\s*$')
+        {
+          $ChangeLogVersion = $Matches[1]
+        }
+
+        If ($ChangeLogPublicBicepRegistryIdentificationName -ne "unknown" -and $ChangeLogVersion -ne "unknown")
+        {
+          Break
+        }
+      }
+
+      # IF we have found the identification AND the version, we can safely construct our full identification
+      If ($ChangeLogPublicBicepRegistryIdentificationName -ne "unknown" -and $ChangeLogVersion -ne "unkown")
+      {
+        $ChangeLogPublicBicepRegistryIdentification = $ChangeLogPublicBicepRegistryIdentificationName #"{0}:{1}" -f $ChangeLogPublicBicepRegistryIdentificationName, $ChangeLogVersion
+      }
+    }
+
     # Lets try to get our exact module version from our git history
-    $ExactAvmModule = $AvmPublishedModuleListLatest | Where-Object { $_.Name -eq $ReadmePublicBicepRegistryIdentification } | Select-Object -First 1
+    $ExactAvmModule = $AvmPublishedModuleListLatest | Where-Object { $_.Name -eq ($ReadmePublicBicepRegistryIdentification ?? $ChangeLogPublicBicepRegistryIdentification) } | Select-Object -First 1
 
     # Extract our description from the BICEP file. We have 2 variants, single line and multiline.
     $Description = ($BicepFileContent | Where-Object { $_ -like "metadata description =*" } | Select-Object -First 1) -replace "metadata\s*description\s*=\s*", ""
@@ -492,9 +530,9 @@ Function Get-AvmModuleMetadata
 
     $ModuleToAdd = [PsCustomObject] @{
       Name = ($BicepFileContent | Where-Object { $_ -like "metadata name =*" } | Select-Object -First 1) -split "'" | Select-Object -Skip 1 -First 1
-      AcrName = $ReadmePublicBicepRegistryIdentification
+      AcrName = ($ReadmePublicBicepRegistryIdentification ?? $ChangeLogPublicBicepRegistryIdentification)
       IpmHubName = ""
-      Classification = $ReadmeModuleClassification
+      Classification = ($ReadmeModuleClassification ?? $ChangeLogModuleClassification)
       AzureType = $ReadmeModuleAzureType
       PublishedOn = $ExactAvmModule.PublishedOn
       Description = $Description
@@ -1289,7 +1327,7 @@ Function Invoke-IpmHubPackageEnsurance
     $Headers = @{ "Content-Type" = "application/json" }
     $Payload = @{ packages = $PackageData } | ConvertTo-Json -Depth 10
 
-    $Response = Invoke-RestMethod -Uri $PackageCreationApi -Method "Post" -Headers $Headers -Body $Payload
+    $Response = Invoke-RestMethod -Uri $PackageCreationApi -Method "Post" -Headers $Headers -Body $Payload -TimeoutSec 300
     $Response
   }
 
