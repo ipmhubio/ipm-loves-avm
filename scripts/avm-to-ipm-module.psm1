@@ -509,6 +509,7 @@ Function Get-AvmModuleMetadata
 
     $ModuleToAdd.IpmHubName = ($ModuleToAdd.Name -replace " ", "-").ToLowerInvariant()
     $ModuleToAdd.IpmHubName = $ModuleToAdd.IpmHubName.Replace("(", "").Replace(")", "").Replace("\", "-").Replace("/", "-")
+    $ModuleToAdd.IpmHubName = $ModuleToAdd.IpmHubName.Replace(".", "")
 
     # Now make sure that our ipm hub gets possible replacements
     ForEach($Replacement in $IpmHubNameReplacements)
