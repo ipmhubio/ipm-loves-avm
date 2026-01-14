@@ -122,6 +122,7 @@ Else
       If ($ModuleMetadataSingle.Modules.Count -eq 0)
       {
         "Could not find a AVM module with the tag '{0}'. Skipped." -f $PublishedTagDetails.TagName | Write-Warning
+        Continue
       }
 
       If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
