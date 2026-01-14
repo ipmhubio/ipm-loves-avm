@@ -500,7 +500,7 @@ Function Get-AvmModuleMetadata
       }
 
       # IF we have found the identification AND the version, we can safely construct our full identification
-      If ($ChangeLogPublicBicepRegistryIdentificationName -ne "unknown" -and $ChangeLogVersion -ne "unkown")
+      If ($ChangeLogPublicBicepRegistryIdentificationName -ne "unknown" -and $ChangeLogVersion -ne "unknown")
       {
         $ChangeLogPublicBicepRegistryIdentification = $ChangeLogPublicBicepRegistryIdentificationName #"{0}:{1}" -f $ChangeLogPublicBicepRegistryIdentificationName, $ChangeLogVersion
       }
