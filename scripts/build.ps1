@@ -119,6 +119,10 @@ Else
       & git checkout $PublishedTagDetails.TagName > $null 2>&1
       $ModuleMetadataSingle = Get-AvmModuleMetadata -AvmRootFolder $AvmSubFolder -ResourceModules -UtilityModules -FilterByPublicName $PublishedTagDetails.Name -IpmHubNameReplacements $IpmHubNameReplacements -Verbose:$VerbosePreference
       $ModuleChild = $ModuleMetadataSingle.Modules | Select-Object -First 1
+      If ($ModuleMetadataSingle.Modules.Count -eq 0)
+      {
+        "Could not find a AVM module with the tag '{0}'. Skipped." -f $PublishedTagDetails.TagName | Write-Warning
+      }
 
       If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
       {
