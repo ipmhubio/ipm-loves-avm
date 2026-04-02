@@ -100,6 +100,7 @@ $ErrorActionPreference = "Stop"
 $downloadedCount = 0
 $failedCount = 0
 $failedPackages = @()
+$reportMessage = ""
 
 try
 {
