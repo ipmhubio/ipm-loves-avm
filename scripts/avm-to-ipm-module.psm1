@@ -757,6 +757,40 @@ Function Remove-TelemetryFromBicepFile
   }
 }
 
+Function ConvertTo-BicepStringLiteral
+{
+  [CmdletBinding()]
+  Param
+  (
+    [AllowNull()]
+    [AllowEmptyString()]
+    [String] $Value
+  )
+
+  Begin
+  {
+    "{0} - START" -f $MyInvocation.MyCommand | Write-Verbose
+  }
+
+  Process
+  {
+    If ($null -eq $Value)
+    {
+      return "''"
+    }
+
+    # Bicep single-quoted string escaping:
+    # a single quote inside the value must be doubled.
+    $EscapedValue = $Value -replace "'", "''"
+    return "'{0}'" -f $EscapedValue
+  }
+
+  End
+  {
+    "{0} - END" -f $MyInvocation.MyCommand | Write-Verbose
+  }
+}
+
 Function Add-AdditionalMetadataToBicepFile
 {
   [CmdletBinding()]
@@ -792,45 +826,84 @@ Function Add-AdditionalMetadataToBicepFile
     }
 
     $BicepContent = Get-Content -Path $BicepFile -Encoding "UTF8"
-    $FinalBicepContent = New-Object System.Collections.Generic.List[string]
+    $FinalBicepContent = [System.Collections.Generic.List[string]]::new()
+
     $DescriptionStartFound = $False
     $DescriptionEndFound = $False
-    $DescriptionIsMultiline = $False
+    $DescriptionIsMultiLine = $False
     $MetadataPlaced = $False
-    For ($x = 0; $x -lt $BicepContent.Count; $x++)
+
+    # Regexes intentionally split by case.
+    # Do not try to collapse these into one "smart" regex.
+    $SingleLineDescriptionPattern = "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*'[^'\r\n]*'[ \t]*(?://.*)?$"
+    $MultiLineDescriptionSameLinePattern = "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*'''[\s\S]*?'''[ \t]*(?://.*)?$"
+    $MultiLineDescriptionStartPattern = "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*'''[ \t]*(?://.*)?$"
+    $MultiLineDescriptionEndPattern = "^[ \t]*'''[ \t]*(?://.*)?$"
+    $MetadataKeys = @($Metadata.Keys | Sort-Object)
+
+    For ($Index = 0; $Index -lt $BicepContent.Count; $Index++)
     {
-      $Line = $BicepContent[$x]
-      $FinalBicepContent.Add($Line ?? "")
+      $Line = $BicepContent[$Index]
+      $SafeLine = $Line ?? ''
+      $TrimmedLine = $SafeLine.TrimEnd()
+
+      Write-Verbose ("{0} - Processing line {1}: {2}" -f $MyInvocation.MyCommand, ($Index + 1), $TrimmedLine)
+      $FinalBicepContent.Add($SafeLine)
+
       If ($MetadataPlaced)
       {
-        Continue
+          Continue
       }
 
-      # Make sure that we have a line that does not end with tabs or spaces.
-      $Line = $Line.TrimEnd().Trim('\t')
-
-      # Found the description metadata element ?
-      If (-not $DescriptionStartFound -and $Line -match "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*('{1,3})(.*?)(\1)?(?:[ \t]*//.*)?$")
+      If (-not $DescriptionStartFound)
       {
-        $DescriptionStartFound = $True
-        $DescriptionIsMultiLine = $Matches[1] -eq "'''"
-        $DescriptionEndFound = (($Matches[3] -eq "'''") -or ($Matches[3] -eq "'"))
-      } `
-      ElseIf ($DescriptionStartFound -and $DescriptionIsMultiline -and (-not $DescriptionEndFound -and $Line -match "'''[ \t]*(//.*)?$"))
+        If ($TrimmedLine -match $SingleLineDescriptionPattern)
+        {
+          $DescriptionStartFound = $True
+          $DescriptionEndFound = $True
+          $DescriptionIsMultiLine = $False
+          Write-Verbose ("{0} - Found single-line metadata description on line {1}" -f $MyInvocation.MyCommand, ($Index + 1))
+        }
+        ElseIf ($TrimmedLine -match $MultiLineDescriptionSameLinePattern)
+        {
+          $DescriptionStartFound = $True
+          $DescriptionEndFound = $True
+          $DescriptionIsMultiLine = $True
+          Write-Verbose ("{0} - Found same-line triple-quoted metadata description on line {1}" -f $MyInvocation.MyCommand, ($Index + 1))
+        }
+        ElseIf ($TrimmedLine -match $MultiLineDescriptionStartPattern)
+        {
+          $DescriptionStartFound = $True
+          $DescriptionEndFound = $False
+          $DescriptionIsMultiLine = $True
+          Write-Verbose ("{0} - Found start of triple-quoted metadata description on line {1}" -f $MyInvocation.MyCommand, ($Index + 1))
+        }
+      }
+      ElseIf ($DescriptionIsMultiLine -and -not $DescriptionEndFound)
       {
-        $DescriptionEndFound = $True
+        If ($TrimmedLine -match $MultiLineDescriptionEndPattern)
+        {
+          $DescriptionEndFound = $True
+          Write-Verbose ("{0} - Found end of triple-quoted metadata description on line {1}" -f $MyInvocation.MyCommand, ($Index + 1))
+        }
       }
 
       If ($DescriptionEndFound)
       {
-        "{0} - Found description on line {1}. Appending metadata..." -f $MyInvocation.MyCommand, ($x+1) | Write-Verbose
-        ForEach($Key in $MetadataKeys)
+        Write-Verbose ("{0} - Appending metadata after description ending on line {1}" -f $MyInvocation.MyCommand, ($Index + 1))
+        ForEach ($Key in $MetadataKeys)
         {
-          $FinalBicepContent.Add(("metadata {0} = '{1}'" -f $Key, $Metadata.$Key))
+          $ValueLiteral = ConvertTo-BicepStringLiteral -Value ([string]$Metadata[$Key])
+          $FinalBicepContent.Add(("metadata {0} = {1}" -f $Key, $ValueLiteral))
         }
 
         $MetadataPlaced = $True
       }
+    }
+
+    If (-not $DescriptionStartFound)
+    {
+      Write-Verbose ("{0} - No metadata description found; no metadata appended" -f $MyInvocation.MyCommand)
     }
 
     Set-Content -Path $BicepFile -Value $FinalBicepContent.ToArray() -Encoding "UTF8" | Out-Null
@@ -967,7 +1040,7 @@ Function Copy-AvmModuleForBuild
   Remove-TelemetryFromBicepFile -BicepFile $MainBicepFile
 
   # Set a version within the main bicep file.
-  Add-AdditionalMetadataToBicepFile -BicepFile $MainBicepFile -Metadata @{ version = $AvmModule.Version; publishedOn = $AvmModule.PublishedOn }
+  Add-AdditionalMetadataToBicepFile -BicepFile $MainBicepFile -Metadata  @{ version = $AvmModule.Version; publishedOn = $AvmModule.PublishedOn }
 
   # Copy additional files, and make some pre-defined changes
   "Found {0} additional files to copy..." -f $AdditionalFiles.Count | Write-Verbose
