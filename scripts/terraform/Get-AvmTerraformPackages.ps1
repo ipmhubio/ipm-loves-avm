@@ -249,6 +249,9 @@ try
 }
 catch
 {
+    Write-Host "[DEBUG] Entered catch block"
+    Write-Host "[DEBUG] Error object: $_"
+    Write-Host "[DEBUG] Exception.Message: $($_.Exception.Message)"
     Write-Log "Critical error in download execution:" -Level "ERROR"
     Write-Log "Error Message: $($_.Exception.Message)" -Level "ERROR"
     Write-Log "Error Details: $($_)" -Level "ERROR"
