@@ -241,7 +241,11 @@ try
     else
     {
         Write-Log "Download process completed. Successful: $downloadedCount, Failed: $failedCount" -Level "SUCCESS"
-        write-log "reportMessage: $reportMessage" -Level "INFO"
+        if (-not [string]::IsNullOrWhiteSpace($reportMessage)) {
+            Write-Log "reportMessage: $reportMessage" -Level "INFO"
+        } else {
+            Write-Log "reportMessage: (none to report)" -Level "INFO"
+        }
     }
 }
 catch
@@ -257,3 +261,5 @@ catch
     }
     exit 1
 }
+
+exit 0
