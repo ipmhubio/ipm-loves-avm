@@ -246,13 +246,9 @@ try
             Write-Log "reportMessage: (none to report)" -Level "INFO"
         }
     }
-    Write-Host "[DEBUG] Exiting main try block successfully"
 }
 catch
 {
-    Write-Host "[DEBUG] Entered catch block"
-    Write-Host "[DEBUG] Error object: $_"
-    Write-Host "[DEBUG] Exception.Message: $($_.Exception.Message)"
     Write-Log "Critical error in download execution:" -Level "ERROR"
     Write-Log "Error Message: $($_.Exception.Message)" -Level "ERROR"
     Write-Log "Error Details: $($_)" -Level "ERROR"
@@ -264,3 +260,5 @@ catch
     }
     exit 1
 }
+
+exit 0
