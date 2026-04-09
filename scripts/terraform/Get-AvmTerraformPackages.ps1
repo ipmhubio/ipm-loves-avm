@@ -246,6 +246,7 @@ try
             Write-Log "reportMessage: (none to report)" -Level "INFO"
         }
     }
+    Write-Host "[DEBUG] Exiting main try block successfully"
 }
 catch
 {
