@@ -32,7 +32,7 @@ If ([String]::IsNullOrEmpty($ScriptFolder))
 }
 
 $ScriptSettings = Get-Content -Path (Join-Path -Path $ScriptFolder -ChildPath "settings.jsonc") -Encoding "UTF8" -Raw | ConvertFrom-Json
-If (-not $PSBoundParameters.ContainsKey("AvmModulesToSkip")) 
+If (-not $PSBoundParameters.ContainsKey("AvmModulesToSkip"))
 {
   $AvmModulesToSkip = $ScriptSettings.avmModulesToSkip
 }
@@ -144,7 +144,7 @@ Else
 
       If ($ModuleChild.AcrName -in $AvmModulesToSkip.name -or $ModuleChild.IpmHubName -in $AvmModulesToSkip.name)
       {
-        "Found AVM module '{0}', but this is on the ignore list. Skipping for copy." -f $AvmModule.AcrName | Write-Warning
+        "Found AVM module '{0}', but this is on the ignore list. Skipping for copy." -f $ModuleChild.AcrName | Write-Warning
         Continue
       }
 
