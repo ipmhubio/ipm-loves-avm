@@ -7,3 +7,4 @@ logs/ipm-process.log
 scripts/terraform/tests/logs/*
 scripts/terraform/tests/CodeCoverage.xml
 scripts/terraform/tests/logs/ipm-process.log
+temp/*

@@ -838,7 +838,7 @@ Function Add-AdditionalMetadataToBicepFile
     $SingleLineDescriptionPattern = "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*'[^'\r\n]*'[ \t]*(?://.*)?$"
     $MultiLineDescriptionSameLinePattern = "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*'''[\s\S]*?'''[ \t]*(?://.*)?$"
     $MultiLineDescriptionStartPattern = "^[ \t]*metadata[ \t]+description[ \t]*=[ \t]*'''(?!.*''').*$"
-    $MultiLineDescriptionEndPattern = "^(?![ \t]*''').*'''[ \t]*(?://.*)?$"
+    $MultiLineDescriptionEndPattern = "^(?:[ \t]*'''[ \t]*(?://.*)?|(?![ \t]*''').*'''[ \t]*(?://.*)?)$"
     $MetadataKeys = @($Metadata.Keys | Sort-Object)
 
     For ($Index = 0; $Index -lt $BicepContent.Count; $Index++)
