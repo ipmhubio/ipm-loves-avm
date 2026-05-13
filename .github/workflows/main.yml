@@ -39,13 +39,13 @@ jobs:
 
     - uses: ipmhubio/ipm-actions/.github/actions/pin-your-bicep@v1
       with:
-        version: 'latest'
+        version: '0.43.1'
 
     - name: Download and install IPM binary
       id: prep_ipm
       uses: ipmhubio/ipm-actions/.github/actions/prep-ipm@v1
       with:
-        version: '0.13.0'
+        version: '0.14.0'
 
     - name: Prepare the AVM modules to become IPMHub acceptable
       id: build
@@ -124,7 +124,7 @@ jobs:
       id: prep_ipm
       uses: ipmhubio/ipm-actions/.github/actions/prep-ipm@v1
       with:
-        version: '0.13.0'
+        version: '0.14.0'
 
     - name: Publish all packages to IPMHub if required
       id: publish
