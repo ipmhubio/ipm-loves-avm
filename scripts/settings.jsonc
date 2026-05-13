@@ -7,6 +7,10 @@
     {
       "name": "dev-center",
       "version": "0.0.1"
+    },
+    {
+      "name": "web-function-app-deployment-slots", // fails due an  " import { certificateType } from '../modules/certificate.bicep'" line.
+      "version": "0.0.1"
     }
   ],
   "nameReplacements": [
