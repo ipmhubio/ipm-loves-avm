@@ -153,6 +153,10 @@
     {
       "search": "sql-managed-instance-database-backup-long-term-retention-policies",
       "replacement": "sql-managed-instance-db-backup-long-term-retention-policies"
+    },
+    {
+      "search": "sql-managed-instance-database-backup-short-term-retention-policies",
+      "replacement": "sql-managed-instance-db-backup-short-term-retention-policies"
     }
   ]
 }
