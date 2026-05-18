@@ -149,6 +149,10 @@
     {
       "search": "stack-hci-virtual-machine-instance",
       "replacement": "stack-hci-virtual-machine-inst"
+    },
+    {
+      "search": "sql-managed-instance-database-backup-long-term-retention-policies",
+      "replacement": "sql-managed-instance-db-backup-long-term-retention-policies"
     }
   ]
 }
