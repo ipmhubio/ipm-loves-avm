@@ -157,6 +157,10 @@
     {
       "search": "sql-managed-instance-database-backup-short-term-retention-policies",
       "replacement": "sql-managed-instance-db-backup-short-term-retention-policies"
+    },
+    {
+      "search": "recovery-services-vault-replication-fabric-replication-protection-containers",
+      "replacement": "recovery-services-vault-replication-fabric-protection-containers"
     }
   ]
 }
