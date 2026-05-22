@@ -11,6 +11,10 @@
     {
       "name": "web-function-app-deployment-slots", // fails due an  " import { certificateType } from '../modules/certificate.bicep'" line.
       "version": "0.0.1"
+    },
+    {
+      "name": "recovery-services-vault-replication-fabric-replication-protection-container-replication-protection-container-mappings",
+      "version": "all"
     }
   ],
   "nameReplacements": [
@@ -157,6 +161,10 @@
     {
       "search": "sql-managed-instance-database-backup-short-term-retention-policies",
       "replacement": "sql-managed-instance-db-backup-short-term-retention-policies"
+    },
+    {
+      "search": "recovery-services-vault-replication-fabric-replication-protection-containers",
+      "replacement": "recovery-services-vault-replication-fabric-protection-containers"
     }
   ]
 }
