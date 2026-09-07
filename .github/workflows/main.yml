@@ -39,7 +39,7 @@ jobs:
 
     - uses: ipmhubio/ipm-actions/.github/actions/pin-your-bicep@v1
       with:
-        version: '0.43.1'
+        version: '0.46.1'
 
     - name: Download and install IPM binary
       id: prep_ipm

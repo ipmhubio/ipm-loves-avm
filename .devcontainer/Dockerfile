@@ -1,5 +1,5 @@
 ARG PWSH_VERSION=7.4
-ARG DIST_VERSION=debian-11
+ARG DIST_VERSION=debian-12
 ARG ARCHITECTURE=x64
 
 # Use a PWSH included image from docker hub
@@ -17,7 +17,7 @@ RUN \
 
 # Download & Install latest version of BICEP
 RUN curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep-latest
-RUN curl -Lo bicep https://github.com/Azure/bicep/releases/download/v0.43.1/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
+RUN curl -Lo bicep https://github.com/Azure/bicep/releases/download/v0.46.1/bicep-linux-x64 && chmod +x ./bicep && mv ./bicep /usr/local/bin/bicep
 
 # Install/Get IPM
 RUN curl -Lo /tmp/ipm.tar.gz https://github.com/ipmhubio/ipm/releases/latest/download/ipm-linux-x64-full.tar.gz && tar -xzf /tmp/ipm.tar.gz -C /usr/local/bin && rm /tmp/ipm.tar.gz && chmod +x /usr/local/bin/ipm
@@ -44,7 +44,7 @@ COPY entrypoint.sh /entrypoint.sh
 COPY run-build.sh /run-build.sh
 COPY run-build-publish.sh /run-build-publish.sh
 COPY run-build-tests.sh /run-build-tests.sh
-RUN chmod +x /entrypoint.sh /run-build.sh /run-build-publish.sh /run-build-tests.sh && dos2unix /run-build.sh && dos2unix /run-build-publish.sh && dos2unix /run-build-tests.sh
+RUN chmod +x /entrypoint.sh /run-build.sh /run-build-publish.sh /run-build-tests.sh && dos2unix /entrypoint.sh /run-build.sh /run-build-publish.sh /run-build-tests.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
